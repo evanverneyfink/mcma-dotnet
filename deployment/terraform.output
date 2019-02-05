@@ -1,0 +1,17 @@
+ame_service_url = https://hiojg0cdch.execute-api.us-east-2.amazonaws.com/dev
+aws_ai_service_url = https://ekbh6o1pub.execute-api.us-east-2.amazonaws.com/dev
+aws_region = us-east-2
+azure_ai_service_url = https://x3upxl16b2.execute-api.us-east-2.amazonaws.com/dev
+cognito_identity_pool_id = us-east-2:6b59e80c-6a45-44e7-b2eb-c3b0a2c96c98
+cognito_user_pool_client_id = 3tu7rsilf7r7l66qltfoude4cq
+cognito_user_pool_id = us-east-2_FMbuj6qlV
+ec2_transform_service_hostname = triskel-mcma-dev-elb-810701332.us-east-2.elb.amazonaws.com
+job_processor_service_url = https://q0ndvsdbo4.execute-api.us-east-2.amazonaws.com/dev
+job_repository_url = https://dldy4i2dm6.execute-api.us-east-2.amazonaws.com/dev
+media_repository_url = https://rcg9yk1z3h.execute-api.us-east-2.amazonaws.com/dev
+service_registry_url = https://w7eijekmuf.execute-api.us-east-2.amazonaws.com/dev
+transform_service_url = https://ob3f1jj0og.execute-api.us-east-2.amazonaws.com/dev
+upload_bucket = triskel.mcma.us-east-2.dev.upload
+website_bucket = triskel.mcma.us-east-2.dev.website
+website_url = https://s3-us-east-2.amazonaws.com/triskel.mcma.us-east-2.dev.website/index.html
+workflow_service_url = https://mii37s2qoc.execute-api.us-east-2.amazonaws.com/dev

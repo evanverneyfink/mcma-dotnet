@@ -1,0 +1,9 @@
+environmentName=triskel.mcma
+environmentType=dev
+
+awsAccountId=213450902387
+awsProfile=terraform
+awsRegion=us-east-2
+
+AzureAccountID=0af5a721-5d3c-451a-88b0-e658114bdea4
+AzureSubscriptionKey=e8700f0d224645a7b05c1a4f3b80b498

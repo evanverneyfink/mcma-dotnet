@@ -1,0 +1,56 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Mcma.Core.Serialization
+{
+    public class McmaObjectConverter : McmaJsonConverter
+    {
+        public override bool CanConvert(Type objectType) => typeof(McmaObject).IsAssignableFrom(objectType);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            var jObj = JObject.Load(reader);
+
+            var obj = Activator.CreateInstance(GetSerializedType(jObj, objectType));
+
+            foreach (var jsonProp in jObj.Properties())
+            {
+                var clrProp = objectType.GetProperties().FirstOrDefault(p => p.CanWrite && p.Name.Equals(jsonProp.Name, StringComparison.OrdinalIgnoreCase));
+                if (clrProp != null)
+                {
+                    try
+                    {
+                        clrProp.SetValue(obj, jsonProp.Value.Type != JTokenType.Null ? jsonProp.Value.ToObject(clrProp.PropertyType, serializer) : null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to write property {clrProp.Name} on type {objectType.Name} with value {jsonProp.Value.ToString()}: {ex}");
+                    }
+                }
+            }
+
+            return obj;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("@type");
+            writer.WriteValue(((IMcmaObject)value).Type);
+
+            foreach (var property in value.GetType().GetProperties().Where(p => p.Name != nameof(IMcmaObject.Type) && p.CanRead))
+            {
+                writer.WritePropertyName(char.ToLower(property.Name[0]) + property.Name.Substring(1));
+
+                serializer.Serialize(writer, property.GetValue(value));
+            }
+
+            writer.WriteEndObject();
+        }
+    }
+}

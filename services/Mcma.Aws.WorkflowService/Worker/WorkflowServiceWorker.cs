@@ -1,0 +1,185 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Amazon.Lambda.Core;
+using Mcma.Core;
+using Newtonsoft.Json.Linq;
+using Amazon.StepFunctions;
+using Amazon.StepFunctions.Model;
+using Mcma.Core.Serialization;
+
+namespace Mcma.Aws.WorkflowService.Worker
+{
+    internal static class WorkflowServiceWorker
+    {
+        private const string JOB_PROFILE_CONFORM_WORKFLOW = "ConformWorkflow";
+        private const string JOB_PROFILE_AI_WORKFLOW = "AiWorkflow";
+
+        internal static async Task ProcessJobAssignmentAsync(WorkflowServiceWorkerRequest @event)
+        {
+            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+
+            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var jobAssignmentId = @event.JobAssignmentId;
+
+            try
+            {
+                // 1. Setting job assignment status to RUNNING
+                await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "RUNNING", null);
+
+                // 2. Retrieving WorkflowJob
+                var workflowJob = await RetrieveWorkflowJobAsync(table, jobAssignmentId);
+
+                // 3. Retrieve JobProfile
+                var jobProfile = await RetrieveJobProfileAsync(workflowJob);
+
+                // 4. Retrieve job inputParameters
+                var jobInput = workflowJob.JobInput;
+
+                // 5. Check if we support jobProfile and if we have required parameters in jobInput
+                ValidateJobProfile(jobProfile, jobInput);
+
+                // 6. Launch the appropriate workflow
+                var workflowInput = new
+                {
+                    Input = jobInput,
+                    NotificationEndpoint = new NotificationEndpoint {HttpEndpoint = jobAssignmentId + "/notifications"}
+                };
+
+                var startExecutionRequest = new StartExecutionRequest
+                {
+                    Input = workflowInput.ToMcmaJson().ToString()
+                };
+
+                switch (jobProfile.Name) {
+                    case JOB_PROFILE_CONFORM_WORKFLOW:
+                        startExecutionRequest.StateMachineArn = @event.Request.StageVariables["ConformWorkflowId"];
+                        break;
+                    case JOB_PROFILE_AI_WORKFLOW:
+                        startExecutionRequest.StateMachineArn = @event.Request.StageVariables["AiWorkflowId"];
+                        break;
+                }
+
+                var stepFunctionClient = new AmazonStepFunctionsClient();
+                var startExecutionResponse = await stepFunctionClient.StartExecutionAsync(startExecutionRequest);
+
+                // 7. saving the executionArn on the jobAssignment
+                var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
+                //TODO: Additional properties on JobAssignment? How to handle this?
+                //jobAssignment.WorkflowExecutionId = startExecutionResponse.ExecutionArn;
+                await PutJobAssignmentAsync(resourceManager, table, jobAssignmentId, jobAssignment);
+            }
+            catch (Exception error)
+            {
+                Console.Error.WriteLine(error);
+                try
+                {
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.Message);
+                }
+                catch (Exception innerError)
+                {
+                    Console.Error.WriteLine(innerError);
+                }
+            }
+        }
+
+        internal static async Task ProcessNotificationAsync(WorkflowServiceWorkerRequest @event)
+        {
+            var jobAssignmentId = @event.JobAssignmentId;
+            var notification = @event.Notification;
+            var notificationJobAssignment = notification.Content.ToMcmaObject<JobAssignment>();
+
+            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+
+            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+
+            jobAssignment.Status = notificationJobAssignment.Status;
+            jobAssignment.StatusMessage = notificationJobAssignment.StatusMessage;
+            if (notificationJobAssignment.Progress != null)
+                jobAssignment.Progress = notificationJobAssignment.Progress;
+
+            jobAssignment.JobOutput = notificationJobAssignment.JobOutput;
+            jobAssignment.DateModified = DateTime.UtcNow;
+
+            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+
+            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+
+            await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
+        }
+
+        private static void ValidateJobProfile(JobProfile jobProfile, IDictionary<string, object> jobInput)
+        {
+            if (jobProfile.Name != JOB_PROFILE_CONFORM_WORKFLOW && jobProfile.Name != JOB_PROFILE_AI_WORKFLOW)
+                throw new Exception("JobProfile '" + jobProfile.Name + "' is not supported");
+
+            if (jobProfile.InputParameters != null)
+            {
+                foreach (var parameter in jobProfile.InputParameters) {
+                    if (jobInput.ContainsKey(parameter.ParameterName))
+                        throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
+                }
+            }
+        }
+
+        private static async Task<JobProfile> RetrieveJobProfileAsync(Job job)
+        {
+            return await RetrieveResourceAsync<JobProfile>(job.JobProfile, "job.jobProfile");
+        }
+
+        private static async Task<Job> RetrieveWorkflowJobAsync(DynamoDbTable table, string jobAssignmentId)
+        {
+            var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
+
+            return await RetrieveResourceAsync<Job>(jobAssignment.Job, "jobAssignment.job");
+        }
+
+        private static async Task<T> RetrieveResourceAsync<T>(string resource, string resourceName)
+        {
+            var mcmaHttp = new McmaHttpClient();
+            try
+            {
+                var response = await mcmaHttp.GetAsync(resource);
+                
+                return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<T>();
+            }
+            catch
+            {
+                throw new Exception("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
+            }
+        }
+
+        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable table, string jobAssignmentId, JobParameterBag jobOutput)
+        {
+            var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
+            jobAssignment.JobOutput = jobOutput;
+            await PutJobAssignmentAsync(null, table, jobAssignmentId, jobAssignment);
+        }
+
+        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, string status, string statusMessage)
+        {
+            var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
+            jobAssignment.Status = status;
+            jobAssignment.StatusMessage = statusMessage;
+            await PutJobAssignmentAsync(resourceManager, table, jobAssignmentId, jobAssignment);
+        }
+
+        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable table, string jobAssignmentId)
+        {
+            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            if (jobAssignment == null)
+                throw new Exception("JobAssignment with id '" + jobAssignmentId + "' not found");
+            return jobAssignment;
+        }
+
+        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, JobAssignment jobAssignment)
+        {
+            jobAssignment.DateModified = DateTime.UtcNow;
+            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+
+            if (resourceManager != null)
+                await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
+        }
+    }
+}
