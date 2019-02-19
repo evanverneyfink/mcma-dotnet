@@ -50,7 +50,7 @@ public class CheckProjectForChanges : IBuildTask
             if (capture == null)
                 continue;
 
-            var dependencyProjFile = new Uri(Path.Combine(projFileInfo.Directory.FullName, capture.Value)).AbsolutePath;
+            var dependencyProjFile = new Uri(Path.Combine(projFileInfo.Directory.FullName, capture.Value.Replace("\\", "/"))).AbsolutePath;
 
             dependencies.AddRange(GetProjectDependencies(dependencyProjFile));
             

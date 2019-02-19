@@ -29,7 +29,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.JobProcessor.Worke
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mcma.Aws.TransformService", "Mcma.Aws.TransformService", "{E537D7B7-2CCD-4DB2-B262-D821B9DC8FFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.TransformService.ApiHandler", "services\Mcma.Aws.TransformService\ApIHandler\Mcma.Aws.TransformService.ApiHandler.csproj", "{56FE9247-67B9-46A6-A894-5EFBD99E4EA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.TransformService.ApiHandler", "services\Mcma.Aws.TransformService\ApiHandler\Mcma.Aws.TransformService.ApiHandler.csproj", "{56FE9247-67B9-46A6-A894-5EFBD99E4EA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.TransformService.Worker", "services\Mcma.Aws.TransformService\Worker\Mcma.Aws.TransformService.Worker.csproj", "{56F365CA-07C0-4238-97CC-13FCE9298894}"
 EndProject
