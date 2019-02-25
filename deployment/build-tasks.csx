@@ -6,9 +6,9 @@
 
 using System.IO;
 
-public class GenerateTerraformTfVars : IBuildTask
+public class GenerateTerraformTfVars : BuildTask
 {
-    public Task<bool> Run() =>
+    protected override Task<bool> ExecuteTask() =>
         Task.Run(() =>
             File.WriteAllText($"{Build.Dirs.Deployment}/terraform.tfvars", 
                 new StringBuilder()
@@ -32,16 +32,16 @@ public class GenerateTerraformTfVars : IBuildTask
             .ContinueWith(t => true);
 }
 
-public class GenerateTerraformWebsiteTf : IBuildTask
+public class GenerateTerraformWebsiteTf : BuildTask
 {
-    const string WebsiteDistDir = "website\\dist\\website";
+    const string WebsiteDistDir = "website/dist/website";
 
-    public Task<bool> Run()
+    protected override Task<bool> ExecuteTask()
     {
         var tfFileContents = new StringBuilder();
         var idx = 0;
 
-        foreach (var file in Directory.EnumerateFiles($".\\{WebsiteDistDir}", "*.*", SearchOption.AllDirectories))
+        foreach (var file in Directory.EnumerateFiles($"./{WebsiteDistDir}", "*.*", SearchOption.AllDirectories))
         {
             var mimeType = string.Empty;
             if (file.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
@@ -78,9 +78,9 @@ public class GenerateTerraformWebsiteTf : IBuildTask
     }
 }
 
-public class GenerateAwsCredentialsJson : IBuildTask
+public class GenerateAwsCredentialsJson : BuildTask
 {
-    public Task<bool> Run() =>
+    protected override Task<bool> ExecuteTask() =>
         Task.Run(() =>
             File.WriteAllText($"{Build.Dirs.Deployment}/aws-credentials.json",
                 new StringBuilder("{")

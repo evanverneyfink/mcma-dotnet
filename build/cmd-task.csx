@@ -2,7 +2,7 @@
 
 using System.Threading.Tasks;
 
-public class CmdTask : IBuildTask
+public class CmdTask : BuildTask
 {
     public CmdTask(string cmd, params string[] args)
     {
@@ -35,7 +35,7 @@ public class CmdTask : IBuildTask
         set => ProcessStartInfo.WorkingDirectory = value;
     }
 
-    public virtual Task<bool> Run() => RunCmd();
+    protected override Task<bool> ExecuteTask() => RunCmd();
 
     protected Task<bool> RunCmd()
     {

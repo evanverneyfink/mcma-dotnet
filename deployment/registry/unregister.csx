@@ -7,7 +7,7 @@
 using System.Threading.Tasks;
 using Mcma.Core;
 
-public class ClearServiceRegistry : IBuildTask
+public class ClearServiceRegistry : BuildTask
 {
     private IDictionary<string, string> ParseContent(string content)
     {
@@ -24,7 +24,7 @@ public class ClearServiceRegistry : IBuildTask
         return serviceUrls;
     }
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         var content = File.ReadAllText($"{Build.Dirs.Deployment.TrimEnd('/')}/terraform.output");
         var terraformOutput = ParseContent(content);

@@ -162,7 +162,7 @@ static readonly IDictionary<string, JobProfile> JOB_PROFILES = new Dictionary<st
     }
 };
 
-public class UpdateServiceRegistry : IBuildTask
+public class UpdateServiceRegistry : BuildTask
 {
     private async Task ConfigureCognito(IDictionary<string, string> terraformOutput, string servicesUrl)
     {
@@ -280,7 +280,7 @@ public class UpdateServiceRegistry : IBuildTask
         }
     }
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         var content = File.ReadAllText($"{Build.Dirs.Deployment.TrimEnd('/')}/terraform.output");
         var terraformOutput = ParseContent(content);

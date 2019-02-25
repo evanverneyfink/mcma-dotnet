@@ -1,6 +1,6 @@
 #load "task.csx"
 
-public class AggregateTask : IBuildTask
+public class AggregateTask : BuildTask
 {
     public AggregateTask(params IBuildTask[] tasks)
     {
@@ -15,7 +15,7 @@ public class AggregateTask : IBuildTask
         return this;
     }
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         foreach (var task in Tasks)
             if (!await task.Run())

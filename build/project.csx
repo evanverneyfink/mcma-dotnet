@@ -9,7 +9,7 @@
 
 using System.Text.RegularExpressions;
 
-public class CheckProjectForChanges : IBuildTask
+public class CheckProjectForChanges : BuildTask
 {
     public CheckProjectForChanges(string project)
     {
@@ -21,7 +21,7 @@ public class CheckProjectForChanges : IBuildTask
     private const string BinFolderRegex = "[\\\\|\\/]bin[\\\\|\\/]";
     private const string ObjFolderRegex = "[\\\\|\\/]obj[\\\\|\\/]";
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         var checks = new List<IBuildTask> {new CheckForFileChanges(Project, $"{Project}/dist/lambda.zip", BinFolderRegex, ObjFolderRegex)};
 
@@ -61,7 +61,7 @@ public class CheckProjectForChanges : IBuildTask
     }
 }
 
-public class BuildProject : IBuildTask
+public class BuildProject : BuildTask
 {
     private const string DistFolder = "dist";
     private const string StagingFolder = DistFolder + "/staging";
@@ -98,7 +98,7 @@ public class BuildProject : IBuildTask
 
     public ZipTask Zip { get; }
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         if (await CheckForChanges.Run())
         {

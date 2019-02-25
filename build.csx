@@ -33,6 +33,8 @@ Build.Tasks["destroy"] = Destroy;
 Build.Tasks["register"] = new UpdateServiceRegistry();
 Build.Tasks["unregister"] = new ClearServiceRegistry();
 Build.Tasks["tfOutput"] = new RetrieveTerraformOutput();
+Build.Tasks["generateTfVars"] = new GenerateTerraformTfVars();
 Build.Tasks["generateWebsiteTf"] = new GenerateTerraformWebsiteTf();
+Build.Tasks["plan"] = Plan;
 
 await Build.Run(Args?.FirstOrDefault());

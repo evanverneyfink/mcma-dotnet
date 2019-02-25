@@ -4,7 +4,7 @@
 using System.IO;
 using System.IO.Compression;
 
-public class ZipTask : IBuildTask
+public class ZipTask : BuildTask
 {
     public ZipTask(string sourceFolder, string destinationFile, string filter = null, IDictionary<string, int> externalAttributes = null)
     {
@@ -22,7 +22,7 @@ public class ZipTask : IBuildTask
 
     public IDictionary<string, int> ExternalAttributes { get; }
 
-    public async Task<bool> Run()
+    protected override async Task<bool> ExecuteTask()
     {
         var rootDirInfo = new DirectoryInfo(SourceFolder);
         if (!rootDirInfo.Exists)

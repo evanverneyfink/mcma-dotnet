@@ -3,7 +3,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-public class CopyFiles : IBuildTask
+public class CopyFiles : BuildTask
 {
     public CopyFiles(string inputFolder, string outputFolder, params string[] excludes)
     {
@@ -18,7 +18,7 @@ public class CopyFiles : IBuildTask
 
     private string[] Excludes { get; }
 
-    public Task<bool> Run()
+    protected override Task<bool> ExecuteTask()
     {
         var inputFolderInfo = new DirectoryInfo(InputFolder);
         if (!inputFolderInfo.Exists)

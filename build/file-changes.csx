@@ -3,7 +3,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-public class CheckForFileChanges : IBuildTask
+public class CheckForFileChanges : BuildTask
 {
     public CheckForFileChanges(string inputFolder, string outputFile, params string[] excludes)
     {
@@ -18,7 +18,7 @@ public class CheckForFileChanges : IBuildTask
 
     private string[] Excludes { get; }
 
-    public Task<bool> Run()
+    protected override Task<bool> ExecuteTask()
     {
         if (!Directory.Exists(OutputPath) && !File.Exists(OutputPath))
             return Task.FromResult(true);

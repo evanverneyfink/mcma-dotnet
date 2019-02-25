@@ -39,6 +39,8 @@ namespace Mcma.Core
 
         public async Task InitAsync()
         {
+            Console.WriteLine($"Retrieving services from {ServicesUrl}...");
+
             var response = (await HttpClient.GetAsync(ServicesUrl)).EnsureSuccessStatusCode();
 
             Services.AddRange(await response.Content.ReadAsArrayFromJsonAsync<Service>());

@@ -3,7 +3,7 @@
 using System.IO;
 using System.Text.RegularExpressions;
 
-public class DeleteFiles : IBuildTask
+public class DeleteFiles : BuildTask
 {
     public DeleteFiles(string folder, params string[] excludes)
     {
@@ -15,7 +15,7 @@ public class DeleteFiles : IBuildTask
 
     private string[] Excludes { get; }
 
-    public Task<bool> Run()
+    protected override Task<bool> ExecuteTask()
     {
         var folderInfo = new DirectoryInfo(Folder);
         if (folderInfo.Exists)
