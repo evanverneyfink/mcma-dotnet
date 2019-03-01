@@ -9,6 +9,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Aws;
 using Mcma.Core;
+using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -23,7 +24,7 @@ namespace Mcma.Aws.Workflows.Conform.StartAiWorkflow
         
         public async Task<JToken> Handler(JToken @event, ILambdaContext context)
         {
-            var resourceManager = new ResourceManager(SERVICE_REGISTRY_URL);
+            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
             try
             {
@@ -36,7 +37,7 @@ namespace Mcma.Aws.Workflows.Conform.StartAiWorkflow
             }
             catch (Exception error)
             {
-                Console.WriteLine("Failed to send notification: {0}", error);
+                Logger.Error("Failed to send notification: {0}", error);
             }
 
             var jobProfiles = await resourceManager.GetAsync<JobProfile>(("name", "AiWorkflow"));

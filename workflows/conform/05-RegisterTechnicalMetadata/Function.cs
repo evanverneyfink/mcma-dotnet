@@ -9,6 +9,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Aws;
 using Mcma.Core;
+using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,7 +47,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 
         public async Task<JToken> Handler(JToken @event, ILambdaContext context)
         {
-            var resourceManager = new ResourceManager(SERVICE_REGISTRY_URL);
+            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
             try
             {
@@ -59,13 +60,13 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
             }
             catch (Exception error)
             {
-                Console.WriteLine("Failed to send notification: {0}", error);
+                Logger.Error("Failed to send notification: {0}", error);
             }
 
             var ameJobId = GetAmeJobId(@event);
             if (ameJobId == null)
                 throw new Exception("Failed to obtain AmeJob ID");
-            Console.WriteLine("[AmeJobID]: " + ameJobId);
+            Logger.Debug("[AmeJobID]: " + ameJobId);
 
             var response = await McmaHttp.GetAsync(ameJobId);
             var ameJob = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<AmeJob>();
@@ -93,14 +94,14 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 
             var bmc = await GetBmContentAsync(@event["data"]["bmContent"].ToString());
 
-            Console.WriteLine("[BMContent]: " + bmc.ToMcmaJson());
+            Logger.Debug("[BMContent]: " + bmc.ToMcmaJson());
 
             var bme = CreateBmEssence(bmc, @event["data"]["repositoryFile"].ToMcmaObject<S3Locator>(), mediaInfo);
 
             bme = await resourceManager.CreateAsync(bme);
             if (bme.Id == null)
                 throw new Exception("Failed to register BMEssence");
-            Console.WriteLine("[BMEssence ID]: " + bme.Id);
+            Logger.Debug("[BMEssence ID]: " + bme.Id);
 
             bmc.BmEssences.Add(bme.Id);
 

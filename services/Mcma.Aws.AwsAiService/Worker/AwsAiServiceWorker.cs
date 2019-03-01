@@ -19,6 +19,7 @@ using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AwsAiService.Worker
 {
@@ -33,7 +34,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(AwsAiServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
@@ -101,7 +102,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                         var transcribeService = new AmazonTranscribeServiceClient();
                         
                         var startJobResponse = await transcribeService.StartTranscriptionJobAsync(transcribeParameters);
-                        Console.WriteLine(startJobResponse.ToMcmaJson().ToString());
+                        Logger.Debug(startJobResponse.ToMcmaJson().ToString());
                         break;
                     case JOB_PROFILE_TRANSLATE_TEXT:
                         var s3Bucket = inputFile.AwsS3Bucket;
@@ -146,7 +147,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                             AwsS3Key = s3Params.Key
                         };
 
-                        Console.WriteLine("Updating job assignment");
+                        Logger.Debug("Updating job assignment");
                         await UpdateJobAssignmentWithOutputAsync(table, jobAssignmentId, jobOutput);
                         await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "COMPLETED");
                         break;
@@ -179,14 +180,14 @@ namespace Mcma.Aws.AwsAiService.Worker
                         var rekognitionClient = new AmazonRekognitionClient();
                         var startCelebRecognitionResponse = await rekognitionClient.StartCelebrityRecognitionAsync(rekoParams);
 
-                        Console.WriteLine(startCelebRecognitionResponse.ToMcmaJson().ToString());
+                        Logger.Debug(startCelebRecognitionResponse.ToMcmaJson().ToString());
                         break;
                 }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Logger.Exception(ex);
 
                 try
                 {
@@ -194,14 +195,14 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception innerEx)
                 {
-                    Console.WriteLine(innerEx);
+                    Logger.Exception(innerEx);
                 }
             }
         }
 
         public static async Task ProcessTranscribeResultAsync(AwsAiServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
@@ -247,7 +248,7 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                Logger.Exception(error);
 
                 try
                 {
@@ -255,7 +256,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception innerError)
                 {
-                    Console.WriteLine(innerError);
+                    Logger.Exception(innerError);
                 }
             }
 
@@ -271,13 +272,13 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine("Failed to cleanup transcribe output file due to error: " + error.Message);
+                Logger.Error("Failed to cleanup transcribe output file due to error: " + error.Message);
             }
         }
 
         public static async Task ProcessRekognitionResultAsync(AwsAiServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
@@ -347,7 +348,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception error)
                 {
-                    Console.WriteLine("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.Message);
+                    Logger.Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.Message);
                 }
 
                 var jobOutput = new JobParameterBag();
@@ -362,7 +363,7 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                Logger.Exception(error);
 
                 try
                 {
@@ -370,7 +371,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception innerError)
                 {
-                    Console.WriteLine(innerError);
+                    Logger.Exception(innerError);
                 }
             }
         }

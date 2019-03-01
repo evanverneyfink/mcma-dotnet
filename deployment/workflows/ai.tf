@@ -14,7 +14,9 @@
 
 #   environment {
 #     variables = {
-#       SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+#       SERVICES_URL          = "${var.services_url}"
+#       SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+#       SERVICES_AUTH_CONTEXT = "${var.services_auth_con
 #       REPOSITORY_BUCKET    = "${var.repository_bucket}"
 #       TEMP_BUCKET          = "${var.temp_bucket}"
 #       WEBSITE_BUCKET       = "${var.website_bucket}"
@@ -60,7 +62,9 @@
 
 #   environment {
 #     variables = {
-#       SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+#       SERVICES_URL          = "${var.services_url}"
+#      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+#      SERVICES_AUTH_CONTEXT = "${var.services_auth_con
 #       REPOSITORY_BUCKET    = "${var.repository_bucket}"
 #       TEMP_BUCKET          = "${var.temp_bucket}"
 #       WEBSITE_BUCKET       = "${var.website_bucket}"
@@ -106,7 +110,9 @@
 
 #   environment {
 #     variables = {
-#       SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+#       SERVICES_URL          = "${var.services_url}"
+#      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+#      SERVICES_AUTH_CONTEXT = "${var.services_auth_con
 #       REPOSITORY_BUCKET    = "${var.repository_bucket}"
 #       TEMP_BUCKET          = "${var.temp_bucket}"
 #       WEBSITE_BUCKET       = "${var.website_bucket}"
@@ -178,7 +184,9 @@
 
 #   environment {
 #     variables = {
-#       SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+#       SERVICES_URL          = "${var.services_url}"
+#      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+#      SERVICES_AUTH_CONTEXT = "${var.services_auth_con
 #       REPOSITORY_BUCKET    = "${var.repository_bucket}"
 #       TEMP_BUCKET          = "${var.temp_bucket}"
 #       WEBSITE_BUCKET       = "${var.website_bucket}"
@@ -198,7 +206,9 @@
 
 #   environment {
 #     variables = {
-#       SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+#       SERVICES_URL          = "${var.services_url}"
+#      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+#      SERVICES_AUTH_CONTEXT = "${var.services_auth_con
 #       REPOSITORY_BUCKET    = "${var.repository_bucket}"
 #       TEMP_BUCKET          = "${var.temp_bucket}"
 #       WEBSITE_BUCKET       = "${var.website_bucket}"

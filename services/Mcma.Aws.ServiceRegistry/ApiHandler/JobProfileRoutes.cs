@@ -8,6 +8,7 @@ using Mcma.Api;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using System.Net;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.ServiceRegistry.ApiHandler
 {
@@ -15,8 +16,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
     {
         public static async Task GetJobProfilesAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetJobProfilesAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobProfilesAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -24,20 +25,20 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
             if (request.QueryStringParameters.Any())
             {
-                Console.WriteLine(
+                Logger.Debug(
                     "Applying job profile filter from query string: " + string.Join(", ", request.QueryStringParameters.Select(kvp => $"{kvp.Key}={kvp.Value}")));
                 jobProfiles.Filter(request.QueryStringParameters);
             }
 
             response.JsonBody = jobProfiles.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task AddJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(AddJobProfileAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(AddJobProfileAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var jobProfile = request.JsonBody?.ToMcmaObject<JobProfile>();
             if (jobProfile == null)
@@ -61,13 +62,13 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             response.Headers["Location"] = jobProfile.Id;
             response.JsonBody = jobProfile.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task GetJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetJobProfileAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobProfileAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -84,8 +85,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
         public static async Task PutJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(PutJobProfileAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(PutJobProfileAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var jobProfile = request.JsonBody?.ToMcmaObject<JobProfile>();
             if (jobProfile == null)
@@ -110,8 +111,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
         public static async Task DeleteJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteJobProfileAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteJobProfileAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

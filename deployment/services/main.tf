@@ -1,8 +1,3 @@
-provider "aws" {
-  profile    = "${var.aws_profile}"
-  region     = "${var.aws_region}"
-}
-
 resource "aws_iam_role" "iam_for_exec_lambda" {
   name               = "${format("%.64s", "${var.global_prefix}.${var.aws_region}.services.lambda_exec_role")}"
   assume_role_policy = "${file("policies/lambda-assume-role.json")}"

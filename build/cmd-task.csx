@@ -63,7 +63,7 @@ public class CmdTask : BuildTask
                 Process.ErrorDataReceived -= OnErrorDataReceived;
 
             if (Process.ExitCode != 0)
-                throw new Exception($"Process '{Process.ProcessName}' exited with exit code {Process.ExitCode}.");
+                throw new Exception($"Process '{ProcessStartInfo.FileName}' exited with exit code {Process.ExitCode}.");
 
             return await OnExit();
         });

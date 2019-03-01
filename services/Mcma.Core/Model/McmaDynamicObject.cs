@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq.Expressions;
+using Mcma.Core.Logging;
 
 namespace Mcma.Core
 {
@@ -25,7 +26,7 @@ namespace Mcma.Core
                 value = (T)PropertyDictionary[key];
                 return true;
             }
-            Console.WriteLine($"Failed to find key '{key}' in dynamic object of type {GetType().Name}. Existing keys are {string.Join(", ", PropertyDictionary.Keys)}.");
+            Logger.Debug($"Failed to find key '{key}' in dynamic object of type {GetType().Name}. Existing keys are {string.Join(", ", PropertyDictionary.Keys)}.");
             return false;
         }
 

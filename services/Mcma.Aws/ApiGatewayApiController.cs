@@ -6,6 +6,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Mcma.Core.Serialization;
 using Mcma.Api;
 using System.IO;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws
 {
@@ -14,6 +15,7 @@ namespace Mcma.Aws
         static ApiGatewayApiController()
         {
             McmaTypes.Add<S3Locator>();
+            Logger.Global = new LambdaLoggerWrapper();
         }
 
         private McmaApiController McmaApiController { get; } = new McmaApiController();

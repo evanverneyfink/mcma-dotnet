@@ -15,7 +15,8 @@ public class GenerateTerraformTfVars : BuildTask
                     .AppendLine($"environment_name = \"{Build.Inputs.environmentName}\"")
                     .AppendLine($"environment_type = \"{Build.Inputs.environmentType}\"")
                     .AppendLine($"aws_account_id = \"{Build.Inputs.awsAccountId}\"")
-                    .AppendLine($"aws_profile = \"{Build.Inputs.awsProfile}\"")
+                    .AppendLine($"aws_access_key = \"{Build.Inputs.awsAccessKey}\"")
+                    .AppendLine($"aws_secret_key = \"{Build.Inputs.awsSecretKey}\"")
                     .AppendLine($"aws_region = \"{Build.Inputs.awsRegion}\"")
                     .AppendLine($"aws_instance_type = \"{Build.Inputs.awsInstanceType}\"")
                     .AppendLine($"aws_instance_count = \"{Build.Inputs.awsInstanceCount}\"")
@@ -83,7 +84,7 @@ public class GenerateAwsCredentialsJson : BuildTask
     protected override Task<bool> ExecuteTask() =>
         Task.Run(() =>
             File.WriteAllText($"{Build.Dirs.Deployment}/aws-credentials.json",
-                new StringBuilder("{")
+                new StringBuilder()
                     .AppendLine("{")
                     .AppendLine($"    \"accessKeyId\": \"{Build.Inputs.awsAccessKey}\",")
                     .AppendLine($"    \"secretAccessKey\": \"{Build.Inputs.awsSecretKey}\",")
@@ -120,6 +121,7 @@ public static readonly IBuildTask Deploy = new AggregateTask(
     Terraform.Init(),
     Terraform.Apply(),
     new RetrieveTerraformOutput(),
+    new GenerateAwsCredentialsJson(),
     new UpdateServiceRegistry());
 
 public static readonly IBuildTask Destroy = new AggregateTask(

@@ -13,6 +13,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AzureAiService.Worker
 {
@@ -46,7 +47,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(AzureAiServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
             var azure = new AzureConfig(@event);
@@ -93,24 +94,51 @@ namespace Mcma.Aws.AzureAiService.Worker
                         var authTokenUrl = azure.ApiUrl + "/auth/" + azure.Location + "/Accounts/" + azure.AccountID + "/AccessToken?allowEdit=true";
                         var customHeaders = new Dictionary<string, string> { ["Ocp-Apim-Subscription-Key"] = azure.SubscriptionKey };
 
-                        Console.WriteLine($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
+                        Logger.Debug($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
                         var mcmaHttp = new McmaHttpClient();
                         var response = await mcmaHttp.GetAsync(authTokenUrl, customHeaders);
 
                         var apiToken = response.Content.ReadAsJsonAsync();
-                        Console.WriteLine($"Azure API Token: {apiToken}");
+                        Logger.Debug($"Azure API Token: {apiToken}");
 
-                        var postVideoUrl = azure.ApiUrl + "/" + azure.Location + "/Accounts/" + azure.AccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.AwsS3Key + "&callbackUrl=" + jobAssignmentId + "/notifications&videoUrl=" + mediaFileUrl + "&fileName=" + inputFile.AwsS3Key;
+                        // call the Azure API to process the video 
+                        // in this scenario the video is located in a public link
+                        // so no need to upload the file to Azure
+                        /* Sample URL Structure      
+                            https://api.videoindexer.ai/{location}/Accounts/{accountId}/Videos?
+                                accessToken={accessToken}&
+                                name={name}?description={string}&
+                                partition={string}&
+                                externalId={string}&
+                                callbackUrl={string}&
+                                metadata={string}&
+                                language={string}&
+                                videoUrl={string}&
+                                fileName={string}&
+                                indexingPreset={string}&
+                                streamingPreset=Default&
+                                linguisticModelId={string}&
+                                privacy={string}&
+                                externalUrl={string}" */
+
+                        var secureHost = new Uri(jobAssignmentId, UriKind.Absolute).Host;
+                        var nonSecureHost = new Uri(@event.StageVariables["PublicUrlNonSecure"], UriKind.Absolute).Host;
+
+                        var callbackUrl = jobAssignmentId.Replace(secureHost, nonSecureHost);
+                        callbackUrl = callbackUrl + "/notifications";
+                        callbackUrl = Uri.EscapeDataString(callbackUrl);
+
+                        var postVideoUrl = azure.ApiUrl + "/" + azure.Location + "/Accounts/" + azure.AccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.AwsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUrl + "&fileName=" + inputFile.AwsS3Key;
                         
-                        Console.WriteLine($"Call Azure Video Indexer API: Doing a POST on {postVideoUrl}");
+                        Logger.Debug($"Call Azure Video Indexer API: Doing a POST on {postVideoUrl}");
                         var postVideoResponse = await mcmaHttp.PostAsync(postVideoUrl, null);
 
                         if ((int)postVideoResponse.StatusCode != 200)
-                            Console.WriteLine($"Azure Video Indexer - Error processing the video: ${response.StatusCode} ${(response.Content != null ? await response.Content.ReadAsStringAsync() : "[no body]")}");
+                            Logger.Error($"Azure Video Indexer - Error processing the video: ${response.StatusCode} ${(response.Content != null ? await response.Content.ReadAsStringAsync() : "[no body]")}");
                         else
                         {
                             var azureAssetInfo = await postVideoResponse.Content.ReadAsJsonAsync();
-                            Console.WriteLine("azureAssetInfo: ", azureAssetInfo);
+                            Logger.Debug("azureAssetInfo: ", azureAssetInfo);
 
                             try
                             {
@@ -121,7 +149,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                             }
                             catch (Exception error)
                             {
-                                Console.WriteLine("Error updating the job", error);
+                                Logger.Error("Error updating the job", error);
                             }
                         }
                         break;
@@ -130,7 +158,7 @@ namespace Mcma.Aws.AzureAiService.Worker
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Logger.Exception(ex);
 
                 try
                 {
@@ -138,7 +166,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 }
                 catch (Exception innerEx)
                 {
-                    Console.WriteLine(innerEx);
+                    Logger.Exception(innerEx);
                 }
             }
         }
@@ -147,7 +175,7 @@ namespace Mcma.Aws.AzureAiService.Worker
         {
             var jobAssignmentId = @event.JobAssignmentId;
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var azure = new AzureConfig(@event);
 
@@ -155,7 +183,7 @@ namespace Mcma.Aws.AzureAiService.Worker
             var azureState = @event.Notification?.State;
             if (azureVideoId == null || azureState == null)
             {
-                Console.WriteLine("POST is not coming from Azure Video Indexer. Expected notification to have id and state properties.");
+                Logger.Warn("POST is not coming from Azure Video Indexer. Expected notification to have id and state properties.");
                 return;
             }
 
@@ -164,20 +192,20 @@ namespace Mcma.Aws.AzureAiService.Worker
                 var authTokenUrl = azure.ApiUrl + "/auth/" + azure.Location + "/Accounts/" + azure.AccountID + "/AccessToken?allowEdit=true";
                 var customHeaders = new Dictionary<string, string> { ["Ocp-Apim-Subscription-Key"] = azure.SubscriptionKey };
 
-                Console.WriteLine($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
+                Logger.Debug($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
                 var mcmaHttp = new McmaHttpClient();
                 var response = await mcmaHttp.GetAsync(authTokenUrl, customHeaders);
 
                 var apiToken = response.Content.ReadAsJsonAsync();
-                Console.WriteLine($"Azure API Token: {apiToken}");
+                Logger.Debug($"Azure API Token: {apiToken}");
                 
                 var metadataFromAzureVideoIndexer = azure.ApiUrl + "/" + azure.Location + "/Accounts/" + azure.AccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
 
-                Console.WriteLine("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexer);
+                Logger.Debug("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexer);
                 var indexedVideoMetadataResponse = await mcmaHttp.GetAsync(metadataFromAzureVideoIndexer);
 
                 var videoMetadata = await indexedVideoMetadataResponse.Content.ReadAsJsonAsync();
-                Console.WriteLine("Azure AI video metadata : ", videoMetadata);
+                Logger.Debug("Azure AI video metadata : ", videoMetadata);
 
                 //Need to hydrate the destination bucket from the job input
                 var workflowJob = await RetrieveJobAsync(table, jobAssignmentId);
@@ -219,7 +247,7 @@ namespace Mcma.Aws.AzureAiService.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                Logger.Exception(error);
 
                 try
                 {
@@ -227,7 +255,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 }
                 catch (Exception innerEx)
                 {
-                    Console.WriteLine(innerEx);
+                    Logger.Exception(innerEx);
                 }
             }
         }

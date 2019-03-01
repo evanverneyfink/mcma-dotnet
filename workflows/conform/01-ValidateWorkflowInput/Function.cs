@@ -7,6 +7,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Aws;
 using Mcma.Core;
+using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json.Linq;
 
@@ -16,14 +17,12 @@ namespace Mcma.Aws.Workflows.Conform.ValidateWorkflowInput
 {
     public class Function
     {
-        private static readonly string SERVICE_REGISTRY_URL = Environment.GetEnvironmentVariable(nameof(SERVICE_REGISTRY_URL));
-
         public async Task<JToken> Handler(JToken @event, ILambdaContext context)
         {
             if (@event == null)
                 throw new Exception("Missing workflow input");
 
-            var resourceManager = new ResourceManager(SERVICE_REGISTRY_URL);
+            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
             try
             {
@@ -36,7 +35,7 @@ namespace Mcma.Aws.Workflows.Conform.ValidateWorkflowInput
             }
             catch (Exception error)
             {
-                Console.WriteLine("Failed to send notification: {0}", error);
+                Logger.Error("Failed to send notification: {0}", error);
             }
 
             var input = @event["input"];

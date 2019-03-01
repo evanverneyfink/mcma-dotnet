@@ -1,13 +1,9 @@
-provider "aws" {
-  profile    = "${var.aws_profile}"
-  region     = "${var.aws_region}"
-}
-
 data "template_file" "s3_public_read_write_policy_upload" {
   template = "${file("policies/s3-public-read-write.json")}"
 
   vars {
     bucket_name = "${var.upload_bucket}"
+    aws_account_id = "${var.aws_account_id}"
   }
 }
 

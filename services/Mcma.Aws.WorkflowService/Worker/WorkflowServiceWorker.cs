@@ -18,7 +18,7 @@ namespace Mcma.Aws.WorkflowService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(WorkflowServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
@@ -104,7 +104,7 @@ namespace Mcma.Aws.WorkflowService.Worker
 
             await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
         }

@@ -18,152 +18,154 @@ using Amazon.S3.Model;
 using Newtonsoft.Json.Linq;
 using Mcma.Core;
 
-public static readonly AWSCredentials AwsProfileCredentials = new StoredProfileAWSCredentials("terraform");
-
-static readonly IDictionary<string, JobProfile> JOB_PROFILES = new Dictionary<string, JobProfile>
-{
-    ["ConformWorkflow"] = new JobProfile
-    {
-        Name = "ConformWorkflow",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "metadata", ParameterType = nameof(DescriptiveMetadata)},
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "websiteMediaFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "aiWorkflow", ParameterType = nameof(WorkflowJob)},
-            new JobParameter {ParameterName = "bmContent", ParameterType = nameof(BMContent)}
-        }
-    },
-    ["AiWorkflow"] = new JobProfile
-    {
-        Name = "AiWorkflow",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "bmContent", ParameterType = nameof(BMContent)},
-            new JobParameter {ParameterName = "bmEssence", ParameterType = nameof(BMEssence)}
-        }
-    },
-    ["ExtractTechnicalMetadata"] = new JobProfile
-    {
-        Name = "ExtractTechnicalMetadata",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    },
-    ["CreateProxyLambda"] = new JobProfile
-    {
-        Name = "CreateProxyLambda",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    },
-    ["CreateProxyEC2"] = new JobProfile
-    {
-        Name = "CreateProxyEC2",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    },
-    ["ExtractThumbnail"] = new JobProfile
-    {
-        Name = "ExtractThumbnail",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        },
-        OptionalInputParameters = new[]
-        {
-            new JobParameter {ParameterName = "ebucore:width"},
-            new JobParameter {ParameterName = "ebucore:height"}
-        }
-    },
-    ["AWSTranscribeAudio"] = new JobProfile
-    {
-        Name = "AWSTranscribeAudio",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    },
-    ["AWSTranslateText"] = new JobProfile
-    {
-        Name = "AWSTranslateText",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "targetLanguageCode", ParameterType = "awsLanguageCode"},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        },
-        OptionalInputParameters = new[]
-        {
-            new JobParameter {ParameterName = "sourceLanguageCode", ParameterType = "awsLanguageCode"}
-        }
-    },
-    ["AWSDetectCelebrities"] = new JobProfile
-    {
-        Name = "AWSDetectCelebrities",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    },
-    ["AzureExtractAllAIMetadata"] = new JobProfile
-    {
-        Name = "AzureExtractAllAIMetadata",
-        InputParameters = new[]
-        {
-            new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
-            new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
-        },
-        OutputParameters = new[]
-        {
-            new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
-        }
-    }
-};
-
 public class UpdateServiceRegistry : BuildTask
 {
+    private static readonly JObject AwsCredentialsJson = JObject.Parse(File.ReadAllText("./deployment/aws-credentials.json"));
+    private static readonly AWSCredentials AwsCredentials = new BasicAWSCredentials(AwsCredentialsJson["accessKeyId"].Value<string>(), AwsCredentialsJson["secretAccessKey"].Value<string>());
+    private static readonly RegionEndpoint AwsRegion = RegionEndpoint.GetBySystemName(AwsCredentialsJson["region"].Value<string>());
+    
+    private static readonly IDictionary<string, JobProfile> JOB_PROFILES = new Dictionary<string, JobProfile>
+    {
+        ["ConformWorkflow"] = new JobProfile
+        {
+            Name = "ConformWorkflow",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "metadata", ParameterType = nameof(DescriptiveMetadata)},
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "websiteMediaFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "aiWorkflow", ParameterType = nameof(WorkflowJob)},
+                new JobParameter {ParameterName = "bmContent", ParameterType = nameof(BMContent)}
+            }
+        },
+        ["AiWorkflow"] = new JobProfile
+        {
+            Name = "AiWorkflow",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "bmContent", ParameterType = nameof(BMContent)},
+                new JobParameter {ParameterName = "bmEssence", ParameterType = nameof(BMEssence)}
+            }
+        },
+        ["ExtractTechnicalMetadata"] = new JobProfile
+        {
+            Name = "ExtractTechnicalMetadata",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        },
+        ["CreateProxyLambda"] = new JobProfile
+        {
+            Name = "CreateProxyLambda",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        },
+        ["CreateProxyEC2"] = new JobProfile
+        {
+            Name = "CreateProxyEC2",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        },
+        ["ExtractThumbnail"] = new JobProfile
+        {
+            Name = "ExtractThumbnail",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            },
+            OptionalInputParameters = new[]
+            {
+                new JobParameter {ParameterName = "ebucore:width"},
+                new JobParameter {ParameterName = "ebucore:height"}
+            }
+        },
+        ["AWSTranscribeAudio"] = new JobProfile
+        {
+            Name = "AWSTranscribeAudio",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        },
+        ["AWSTranslateText"] = new JobProfile
+        {
+            Name = "AWSTranslateText",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "targetLanguageCode", ParameterType = "awsLanguageCode"},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            },
+            OptionalInputParameters = new[]
+            {
+                new JobParameter {ParameterName = "sourceLanguageCode", ParameterType = "awsLanguageCode"}
+            }
+        },
+        ["AWSDetectCelebrities"] = new JobProfile
+        {
+            Name = "AWSDetectCelebrities",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        },
+        ["AzureExtractAllAIMetadata"] = new JobProfile
+        {
+            Name = "AzureExtractAllAIMetadata",
+            InputParameters = new[]
+            {
+                new JobParameter {ParameterName = "inputFile", ParameterType = nameof(Locator)},
+                new JobParameter {ParameterName = "outputLocation", ParameterType = nameof(Locator)}
+            },
+            OutputParameters = new[]
+            {
+                new JobParameter {ParameterName = "outputFile", ParameterType = nameof(Locator)}
+            }
+        }
+    };
+
     private async Task ConfigureCognito(IDictionary<string, string> terraformOutput, string servicesUrl)
     {
         // 1. (Re)create cognito user for website
@@ -171,9 +173,7 @@ public class UpdateServiceRegistry : BuildTask
         const string tempPassword = "b9BC9aX6B3yQK#nr";
         const string password = "%bshgkUTv*RD$sR7";
 
-        var awsRegion = RegionEndpoint.GetBySystemName(terraformOutput["aws_region"]);
-
-        var cognito = new AmazonCognitoIdentityProviderClient(AwsProfileCredentials, awsRegion);
+        var cognito = new AmazonCognitoIdentityProviderClient(AwsCredentials, AwsRegion);
 
         try
         {
@@ -186,8 +186,9 @@ public class UpdateServiceRegistry : BuildTask
             Console.WriteLine("Deleting existing user");
             await cognito.AdminDeleteUserAsync(deleteParams);
         }
-        catch
+        catch (Exception error)
         {
+            Console.WriteLine("Failed to delete existing user:", error);
         }
 
         try
@@ -237,7 +238,12 @@ public class UpdateServiceRegistry : BuildTask
         Console.WriteLine("Uploading deployment configuration to website");
         var config = JObject.FromObject(new
         {
-            servicesUrl,
+            resourceManager = new
+            {
+                servicesUrl = terraformOutput["services_url"],
+                servicesAuthType = terraformOutput["services_auth_type"],
+                servicesAuthContext = terraformOutput["services_auth_context"],
+            },
             aws = new
             {
                 region = terraformOutput["aws_region"],
@@ -270,7 +276,7 @@ public class UpdateServiceRegistry : BuildTask
 
         try
         {
-            var s3 = new AmazonS3Client(AwsProfileCredentials, awsRegion);
+            var s3 = new AmazonS3Client(AwsCredentials, AwsRegion);
             await s3.PutObjectAsync(s3Params);
         }
         catch (Exception error)
@@ -285,7 +291,10 @@ public class UpdateServiceRegistry : BuildTask
         var content = File.ReadAllText($"{Build.Dirs.Deployment.TrimEnd('/')}/terraform.output");
         var terraformOutput = ParseContent(content);
         
-        var servicesUrl = $"{terraformOutput["service_registry_url"]}/services";
+        var servicesUrl = terraformOutput["services_url"];
+        var servicesAuthType = terraformOutput["services_auth_type"];
+        var servicesAuthContext = terraformOutput["services_auth_context"];
+
         var jobProfilesUrl = $"{terraformOutput["service_registry_url"]}/job-profiles";
 
         await ConfigureCognito(terraformOutput, servicesUrl);

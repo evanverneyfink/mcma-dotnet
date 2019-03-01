@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -7,14 +9,17 @@ namespace Mcma.Core
 
     public class McmaHttpClient
     {
-        public McmaHttpClient(IMcmaAuthenticator authenticator = null)
+        public McmaHttpClient(IMcmaAuthenticator authenticator = null, string baseUrl = null)
         {
             HttpClient = authenticator?.CreateAuthenticatedClient() ?? new HttpClient();
+            BaseUrl = baseUrl;
         }
 
         private HttpClient HttpClient { get; }
 
-        public Task<HttpResponseMessage> GetAsync(string url, IDictionary<string, string> headers = null)
+        private string BaseUrl { get; }
+
+        public Task<HttpResponseMessage> GetAsync(string url, IDictionary<string, string> queryParams = null, IDictionary<string, string> headers = null)
             => SendAsync(url, HttpMethod.Get, headers, null);
 
         public Task<HttpResponseMessage> PostAsync(string url, HttpContent body, IDictionary<string, string> headers = null)
@@ -23,11 +28,30 @@ namespace Mcma.Core
         public Task<HttpResponseMessage> PutAsync(string url, HttpContent body, IDictionary<string, string> headers = null)
             => SendAsync(url, HttpMethod.Put, headers, body);
 
+        public Task<HttpResponseMessage> PatchAsync(string url, HttpContent body, IDictionary<string, string> headers = null)
+            => SendAsync(url, new HttpMethod("PATCH"), headers, body);
+
         public Task<HttpResponseMessage> DeleteAsync(string url, IDictionary<string, string> headers = null)
             => SendAsync(url, HttpMethod.Delete, headers, null);
 
+        private string WithQueryParams(string url, IDictionary<string, string> queryParams)
+            => (url ?? string.Empty) + "?" + string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
         private Task<HttpResponseMessage> SendAsync(string url, HttpMethod method, IDictionary<string, string> headers, HttpContent body)
         {
+            if (!string.IsNullOrWhiteSpace(BaseUrl))
+            {
+                if (string.IsNullOrWhiteSpace(url))
+                    url = BaseUrl;
+                else if (url.IndexOf("http://") != 0 || url.IndexOf("https://") != 0)
+                    url = BaseUrl + url;
+                else if (!url.StartsWith(BaseUrl))
+                    throw new Exception($"HttpClient: Making " + method + " request to URL '" + url + "' which does not match BaseUrl '" + BaseUrl + "'");
+            }
+
+            if (string.IsNullOrWhiteSpace(url))
+                throw new Exception("HttpClient: MissingFieldException url in request");
+
             var request = new HttpRequestMessage(method, url);
             
             if (headers != null)

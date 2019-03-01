@@ -10,6 +10,7 @@ using Mcma.Aws;
 using Mcma.Core.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
+using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 
@@ -58,7 +59,7 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
                 }
                 catch (Exception error)
                 {
-                    Console.WriteLine($"Failed processing record.\r\nRecord:\r\n{record.ToMcmaJson()}\r\nError:\r\n{error}");
+                    Logger.Error($"Failed processing record.\r\nRecord:\r\n{record.ToMcmaJson()}\r\nError:\r\n{error}");
                 }
             }
         }

@@ -9,6 +9,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.JobProcessor.ApiHandler
 {
@@ -16,20 +17,20 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
     {
         public static async Task GetJobProcessesAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetJobProcessesAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobProcessesAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
             
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
             response.JsonBody = (await table.GetAllAsync<JobProcess>()).ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task AddJobProcessAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(AddJobProcessAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(AddJobProcessAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var jobProcess = request.JsonBody?.ToMcmaObject<JobProcess>();
             if (jobProcess == null)
@@ -53,7 +54,7 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
             response.Headers["Location"] = jobProcess.Id;
             response.JsonBody = jobProcess.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
 
             // invoking worker lambda function that will create a jobProcess process for this new jobProcess
             var lambdaClient = new AmazonLambdaClient();
@@ -70,8 +71,8 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
         
         public static async Task GetJobProcessAsync(McmaApiRequest request, McmaApiResponse response) 
         {
-            Console.WriteLine(nameof(GetJobProcessAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobProcessAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -89,8 +90,8 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
         
         public static async Task DeleteJobProcessAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteJobProcessAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteJobProcessAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

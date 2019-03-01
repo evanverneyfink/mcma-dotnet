@@ -66,19 +66,26 @@ public class BuildProject : BuildTask
     private const string DistFolder = "dist";
     private const string StagingFolder = DistFolder + "/staging";
 
-    public BuildProject(string project)
+    public BuildProject(string project, bool build = true, bool clean = true)
     {
         Project = project;
         DistFullPath = $"{project}/{DistFolder}";
         StagingFullPath = $"{project}/{StagingFolder}";
 
-        Clean = new DeleteFiles(StagingFullPath);
-        CheckForChanges = new CheckProjectForChanges(project);
+        if (clean)
+            Clean = new DeleteFiles(StagingFullPath);
 
-        ProjectBuild =
-            new AggregateTask(
-                DotNetCli.Clean(project, StagingFolder),
-                DotNetCli.Publish(project, StagingFolder));
+        if (build)
+        {
+            CheckForSourceChanges = new CheckProjectForChanges(project);
+
+            ProjectBuild =
+                new AggregateTask(
+                    DotNetCli.Clean(project, StagingFolder),
+                    DotNetCli.Publish(project, StagingFolder));
+        }
+        else
+            CheckForOutputChanges = new CheckForFileChanges(StagingFullPath, $"{DistFullPath}/lambda.zip", "\\.json");
         
         Zip = new ZipTask(StagingFullPath, $"{DistFullPath}/lambda.zip");
     }
@@ -89,9 +96,12 @@ public class BuildProject : BuildTask
 
     private string StagingFullPath { get; }
 
-    private IBuildTask CheckForChanges { get; }
+    private IBuildTask CheckForSourceChanges { get; }
+
+    private IBuildTask CheckForOutputChanges { get; }
 
     private IBuildTask Clean { get; }
+
     private IBuildTask ProjectBuild { get; }
 
     public IDictionary<string, string> PostBuildCopies { get; } = new Dictionary<string, string>();
@@ -100,16 +110,24 @@ public class BuildProject : BuildTask
 
     protected override async Task<bool> ExecuteTask()
     {
-        if (await CheckForChanges.Run())
+        if (CheckForSourceChanges == null || await CheckForSourceChanges.Run())
         {
-            await Clean.Run();
+            if (Clean != null)
+                await Clean.Run();
 
-            await ProjectBuild.Run();
+            if (ProjectBuild != null)
+                await ProjectBuild.Run();
 
             foreach (var postBuildCopy in PostBuildCopies.Select(kvp => new CopyFiles(Path.Combine(Project, kvp.Key), Path.Combine(StagingFullPath, kvp.Value))))
                 await postBuildCopy.Run();
 
-            await Zip.Run();
+            if (CheckForSourceChanges != null || await CheckForOutputChanges.Run())
+            {
+                Console.WriteLine($"Zipping project {Project} output...");
+                await Zip.Run();
+            }
+            else
+                Console.WriteLine($"Zip file for project {Project} is up-to-date.");
         }
         else
             Console.WriteLine($"Project {Project} is up-to-date.");

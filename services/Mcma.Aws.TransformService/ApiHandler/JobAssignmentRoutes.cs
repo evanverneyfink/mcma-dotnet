@@ -9,6 +9,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.TransformService.ApiHandler
 {
@@ -16,20 +17,20 @@ namespace Mcma.Aws.TransformService.ApiHandler
     {
         public static async Task GetJobAssignmentsAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetJobAssignmentsAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobAssignmentsAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
             
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
             response.JsonBody = (await table.GetAllAsync<JobAssignment>()).ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
         
         public static async Task DeleteJobAssignmentsAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteJobAssignmentsAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteJobAssignmentsAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -38,13 +39,13 @@ namespace Mcma.Aws.TransformService.ApiHandler
             foreach (var jobAssignment in jobAssignments)
                 await table.DeleteAsync<JobAssignment>(jobAssignment.Id);
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task AddJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(AddJobAssignmentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(AddJobAssignmentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var jobAssignment = request.JsonBody?.ToMcmaObject<JobAssignment>();
             if (jobAssignment == null)
@@ -68,7 +69,7 @@ namespace Mcma.Aws.TransformService.ApiHandler
             response.Headers["Location"] = jobAssignment.Id;
             response.JsonBody = jobAssignment.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
 
             // invoking worker lambda function that will create a jobAssignment assignment for this new jobAssignment
             var lambdaClient = new AmazonLambdaClient();
@@ -85,8 +86,8 @@ namespace Mcma.Aws.TransformService.ApiHandler
 
         public static async Task GetJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response) 
         {
-            Console.WriteLine(nameof(GetJobAssignmentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetJobAssignmentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -104,8 +105,8 @@ namespace Mcma.Aws.TransformService.ApiHandler
         
         public static async Task DeleteJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteJobAssignmentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteJobAssignmentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

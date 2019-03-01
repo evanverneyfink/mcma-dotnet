@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Amazon.Lambda.Core;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.JobProcessor.Worker
 {
@@ -11,23 +12,23 @@ namespace Mcma.Aws.JobProcessor.Worker
     {
         internal static async Task CreateJobAssignmentAsync(JobProcessorWorkerRequest @event)
         {
-            Console.WriteLine("Creating job assignment for job process " + @event.JobProcessId);
+            Logger.Debug("Creating job assignment for job process " + @event.JobProcessId);
 
             var mcmaHttp = new McmaHttpClient();
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
 
             var jobProcessId = @event.JobProcessId;
 
-            Console.WriteLine("Getting job process " + @event.JobProcessId);
+            Logger.Debug("Getting job process " + @event.JobProcessId);
             var jobProcess = await table.GetAsync<JobProcess>(jobProcessId);
 
             try
             {
                 var jobId = jobProcess.Job;
                 
-                Console.WriteLine("Job ID for job process " + @event.JobProcessId + " is " + jobId);
+                Logger.Debug("Job ID for job process " + @event.JobProcessId + " is " + jobId);
 
                 if (string.IsNullOrEmpty(jobId))
                     throw new Exception("JobProcess is missing a job definition.");
@@ -35,9 +36,9 @@ namespace Mcma.Aws.JobProcessor.Worker
                 Job job;
                 try
                 {
-                    Console.WriteLine("Getting job " + jobId);
+                    Logger.Debug("Getting job " + jobId);
                     var jobResponse = await mcmaHttp.GetAsync(jobId);
-                    Console.WriteLine("Parsing job " + jobId + " from response");
+                    Logger.Debug("Parsing job " + jobId + " from response");
                     job = await jobResponse.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<Job>();
                 }
                 catch
@@ -47,7 +48,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
                 var jobProfileId = job.JobProfile;
                 
-                Console.WriteLine("Job profile ID for job " + jobId + " is " + jobProfileId);
+                Logger.Debug("Job profile ID for job " + jobId + " is " + jobProfileId);
 
                 if (string.IsNullOrEmpty(jobProfileId))
                     throw new Exception("Job is missing jobProfile");
@@ -55,9 +56,9 @@ namespace Mcma.Aws.JobProcessor.Worker
                 JobProfile jobProfile;
                 try
                 {
-                    Console.WriteLine("Getting job profile " + jobProfileId);
+                    Logger.Debug("Getting job profile " + jobProfileId);
                     var jobProfileResponse = await mcmaHttp.GetAsync(jobProfileId);
-                    Console.WriteLine("Parsing job profile " + jobProfileId + " from repsonse");
+                    Logger.Debug("Parsing job profile " + jobProfileId + " from repsonse");
                     jobProfile = await jobProfileResponse.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<JobProfile>();
                 }
                 catch
@@ -65,7 +66,7 @@ namespace Mcma.Aws.JobProcessor.Worker
                     throw new Exception("Failed to retrieve job profile from url '" + jobProfileId + "'");
                 }
 
-                Console.WriteLine("Validating job input for job " + jobId);
+                Logger.Debug("Validating job input for job " + jobId);
                 var jobInput = job.JobInput;
                 if (jobInput == null)
                     throw new Exception("Job is missing jobInput");
@@ -79,11 +80,11 @@ namespace Mcma.Aws.JobProcessor.Worker
                     }
                 }
 
-                Console.WriteLine("Loading services for job assignment");
+                Logger.Debug("Loading services for job assignment");
                 var services = await resourceManager.GetAsync<Service>();
 
                 Service selectedService = null;
-                ServiceResource jobAssignmentResource = null;
+                ResourceEndpoint jobAssignmentResource = null;
                 
                 foreach (var service in services)
                 {
@@ -91,7 +92,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
                     if (service.JobType == job.Type)
                     {
-                        Console.WriteLine("Matched service " + service.Name + " on job type");
+                        Logger.Debug("Matched service " + service.Name + " on job type");
                         if (service.Resources != null)
                         {
                             foreach (var serviceResource in service.Resources)
@@ -102,7 +103,7 @@ namespace Mcma.Aws.JobProcessor.Worker
                         if (jobAssignmentResource == null)
                             continue;
                         
-                        Console.WriteLine("Matched service resource " + jobAssignmentResource.HttpEndpoint + ". Checking for matching job profile");
+                        Logger.Debug("Matched service resource " + jobAssignmentResource.HttpEndpoint + ". Checking for matching job profile");
 
                         if (service.JobProfiles != null)
                         {
@@ -110,7 +111,7 @@ namespace Mcma.Aws.JobProcessor.Worker
                             {
                                 if (serviceJobProfile == job.JobProfile)
                                 {
-                                    Console.WriteLine("Matched job profile");
+                                    Logger.Debug("Matched job profile");
                                     selectedService = service;
                                 }
                             }
@@ -126,7 +127,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
                 var jobAssignment = new JobAssignment {Job = jobProcess.Job, NotificationEndpoint = new NotificationEndpoint{HttpEndpoint = jobProcessId + "/notifications"}};
                 
-                Console.WriteLine("Submitting job assignment to " + jobAssignmentResource.HttpEndpoint);
+                Logger.Debug("Submitting job assignment to " + jobAssignmentResource.HttpEndpoint);
                 var response = await mcmaHttp.PostAsJsonAsync(jobAssignmentResource.HttpEndpoint, jobAssignment);
                 jobAssignment = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<JobAssignment>();
 
@@ -141,10 +142,10 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             jobProcess.DateModified = DateTime.UtcNow;
 
-            Console.WriteLine("Updating job process on completion");
+            Logger.Debug("Updating job process on completion");
             await table.PutAsync<JobProcess>(jobProcessId, jobProcess);
 
-            Console.WriteLine("Sending job process notification on completion");
+            Logger.Debug("Sending job process notification on completion");
             await resourceManager.SendNotificationAsync(jobProcess, jobProcess.NotificationEndpoint);
         }
 
@@ -160,7 +161,7 @@ namespace Mcma.Aws.JobProcessor.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                Logger.Exception(error);
             }
         }
 
@@ -177,7 +178,7 @@ namespace Mcma.Aws.JobProcessor.Worker
             // not updating job if it already was marked as completed or failed.
             if (jobProcess.Status == "COMPLETED" || jobProcess.Status == "FAILED")
             {
-                Console.WriteLine("Ignoring update of job process that tried to change state from " + jobProcess.Status + " to " + notificationJobData.Status);
+                Logger.Warn("Ignoring update of job process that tried to change state from " + jobProcess.Status + " to " + notificationJobData.Status);
                 return;
             }
 
@@ -189,7 +190,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             await table.PutAsync<JobProcess>(jobProcessId, jobProcess);
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobProcess, jobProcess.NotificationEndpoint);
         }

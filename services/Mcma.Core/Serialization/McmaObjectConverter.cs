@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Mcma.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -28,7 +29,7 @@ namespace Mcma.Core.Serialization
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to write property {clrProp.Name} on type {objectType.Name} with value {jsonProp.Value.ToString()}: {ex}");
+                        Logger.Error($"Failed to write property {clrProp.Name} on type {objectType.Name} with value {jsonProp.Value.ToString()}: {ex}");
                     }
                 }
             }

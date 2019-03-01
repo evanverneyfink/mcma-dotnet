@@ -79,9 +79,11 @@ resource "aws_api_gateway_method_response" "job_repository_options_200" {
   resource_id   = "${aws_api_gateway_resource.job_repository_api_resource.id}"
   http_method   = "${aws_api_gateway_method.job_repository_options_method.http_method}"
   status_code   = "200"
+
   response_models = {
       "application/json" = "Empty"
   }
+
   response_parameters = {
       "method.response.header.Access-Control-Allow-Headers" = true,
       "method.response.header.Access-Control-Allow-Methods" = true,
@@ -105,6 +107,7 @@ resource "aws_api_gateway_integration_response" "job_repository_options_integrat
   resource_id   = "${aws_api_gateway_resource.job_repository_api_resource.id}"
   http_method   = "${aws_api_gateway_method.job_repository_options_method.http_method}"
   status_code   = "${aws_api_gateway_method_response.job_repository_options_200.status_code}"
+
   response_parameters = {
       "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
       "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,PATCH,DELETE'",
@@ -154,8 +157,11 @@ resource "aws_api_gateway_deployment" "job_repository_deployment" {
   variables = {
     "TableName"                = "${var.global_prefix}-job-repository"
     "PublicUrl"                = "${local.job_repository_url}"
-    "ServicesUrl"              = "${local.service_registry_url}/services"
+    "ServicesUrl"              = "${local.services_url}"
+    "ServicesAuthType"         = "${local.services_auth_type}"
+    "ServicesAuthContext"      = "${local.services_auth_context}"
     "WorkerLambdaFunctionName" = "${aws_lambda_function.job-repository-worker.function_name}"
+    "DeploymentHash"           = "${sha256(file("./services/job-repository.tf"))}"
   }
 }
 

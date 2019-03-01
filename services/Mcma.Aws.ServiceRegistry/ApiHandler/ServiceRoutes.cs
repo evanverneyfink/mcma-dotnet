@@ -11,6 +11,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Api;
 using Amazon.Lambda.Core;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.ServiceRegistry.ApiHandler
 {
@@ -18,8 +19,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
     {
         public static async Task GetServicesAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetServicesAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetServicesAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -30,13 +31,13 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
             response.JsonBody = services.ToMcmaJson();
             
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task AddServiceAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(AddServiceAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(AddServiceAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var service = request.JsonBody?.ToMcmaObject<Service>();
             if (service == null)
@@ -60,13 +61,13 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             response.Headers["Location"] = service.Id;
             response.JsonBody = service.ToMcmaJson();
             
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task GetServiceAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetServiceAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetServiceAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -83,8 +84,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
         public static async Task PutServiceAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(PutServiceAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(PutServiceAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var service = request.JsonBody?.ToMcmaObject<Service>();
             if (service == null)
@@ -109,8 +110,8 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
         public static async Task DeleteServiceAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteServiceAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteServiceAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

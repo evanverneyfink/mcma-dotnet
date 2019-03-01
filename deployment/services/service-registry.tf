@@ -64,9 +64,11 @@ resource "aws_api_gateway_method_response" "service_registry_options_200" {
   resource_id   = "${aws_api_gateway_resource.service_registry_api_resource.id}"
   http_method   = "${aws_api_gateway_method.service_registry_options_method.http_method}"
   status_code   = "200"
+
   response_models = {
       "application/json" = "Empty"
   }
+
   response_parameters = {
       "method.response.header.Access-Control-Allow-Headers" = true,
       "method.response.header.Access-Control-Allow-Methods" = true,
@@ -90,6 +92,7 @@ resource "aws_api_gateway_integration_response" "service_registry_options_integr
   resource_id   = "${aws_api_gateway_resource.service_registry_api_resource.id}"
   http_method   = "${aws_api_gateway_method.service_registry_options_method.http_method}"
   status_code   = "${aws_api_gateway_method_response.service_registry_options_200.status_code}"
+
   response_parameters = {
       "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
       "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,PATCH,DELETE'",
@@ -139,6 +142,7 @@ resource "aws_api_gateway_deployment" "service_registry_deployment" {
   variables = {
     "TableName" = "${var.global_prefix}-service-registry"
     "PublicUrl" = "${local.service_registry_url}"
+    "DeploymentHash" = "${sha256(file("./services/service-registry.tf"))}"
   }
 }
 
@@ -146,6 +150,21 @@ output "service_registry_url" {
   value = "${local.service_registry_url}"
 }
 
+output "services_auth_type" {
+  value = "${local.services_auth_type}"
+}
+
+output "services_auth_context" {
+  value = "${local.services_auth_context}"
+}
+
+output "services_url" {
+  value = "${local.services_url}"
+}
+
 locals {
   service_registry_url = "https://${aws_api_gateway_rest_api.service_registry_api.id}.execute-api.${var.aws_region}.amazonaws.com/${var.environment_type}"
+  services_url          = "${local.service_registry_url}/services"
+  services_auth_type    = "AWS4"
+  services_auth_context = "x"
 }

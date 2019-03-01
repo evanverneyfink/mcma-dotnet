@@ -14,6 +14,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json.Linq;
 using Amazon.Lambda.APIGatewayEvents;
+using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 
@@ -30,8 +31,8 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
 
         private static async Task ProcessNotificationAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(ProcessNotificationAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(ProcessNotificationAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             dynamic notification = request.JsonBody;
 
@@ -82,8 +83,8 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
 
         public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            Console.WriteLine(request.ToMcmaJson().ToString());
-            Console.WriteLine(context.ToMcmaJson().ToString());
+            Logger.Debug(request.ToMcmaJson().ToString());
+            Logger.Debug(context.ToMcmaJson().ToString());
 
             return Controller.HandleRequestAsync(request, context);
         }

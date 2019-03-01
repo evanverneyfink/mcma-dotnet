@@ -10,6 +10,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Aws;
 using Mcma.Core;
+using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -42,7 +43,7 @@ namespace Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements
  
         public async Task<JToken> Handler(JToken @event, ILambdaContext context)
         {
-            var resourceManager = new ResourceManager(SERVICE_REGISTRY_URL);
+            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
             try
             {
@@ -55,7 +56,7 @@ namespace Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements
             }
             catch (Exception error)
             {
-                Console.WriteLine("Failed to send notification: {0}", error);
+                Logger.Error("Failed to send notification: {0}", error);
             }
 
             var bme = await GetBmEssenceAsync(@event["data"]["bmEssence"].ToString());
@@ -89,7 +90,7 @@ namespace Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements
             var sec = Regex.Match(normalPlayTime, "(\\d*)S");
             var totalSeconds = CalcSeconds(hour.Success ? int.Parse(hour.Groups[1].Captures[0].Value) : 0, min.Success ? int.Parse(min.Groups[1].Captures[0].Value) : 0, double.Parse(sec.Groups[1].Captures[0].Value));
 
-            Console.WriteLine("[Total Seconds]: " + totalSeconds);
+            Logger.Debug("[Total Seconds]: " + totalSeconds);
 
             if (totalSeconds <= THESHOLD_SECONDS)
                 return "short";

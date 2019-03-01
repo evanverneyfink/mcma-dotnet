@@ -1,8 +1,3 @@
-provider "aws" {
-  profile = "${var.aws_profile}"
-  region  = "${var.aws_region}"
-}
-
 #################################
 #  aws_iam_role : iam_for_exec_lambda
 #################################
@@ -96,7 +91,9 @@ resource "aws_lambda_function" "process-workflow-completion" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      SERVICES_URL          = "${var.services_url}"
+      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+      SERVICES_AUTH_CONTEXT = "${var.services_auth_context}"
     }
   }
 }
@@ -113,7 +110,9 @@ resource "aws_lambda_function" "process-workflow-failure" {
 
   environment {
     variables = {
-      SERVICE_REGISTRY_URL = "${var.service_registry_url}"
+      SERVICES_URL          = "${var.services_url}"
+      SERVICES_AUTH_TYPE    = "${var.services_auth_type}"
+      SERVICES_AUTH_CONTEXT = "${var.services_auth_context}"
     }
   }
 }
@@ -184,7 +183,12 @@ resource "aws_api_gateway_deployment" "workflow_activity_callback_handler_deploy
 
   variables = {
     "PublicUrl" = "${local.workflow_activity_callback_handler_url}"
+    "DeploymentHash" = "${sha256(file("./workflows/main.tf"))}"
   }
+}
+
+output "workflow_service_notification_url" {
+  value = "${local.workflow_activity_callback_handler_url}"
 }
 
 locals {

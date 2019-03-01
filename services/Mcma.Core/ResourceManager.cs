@@ -6,67 +6,64 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Core
 {
     public class ResourceManager
     {
-        public ResourceManager(string servicesUrl, IMcmaAuthenticator authenticator = null)
+        public ResourceManager(ResourceManagerOptions options)
         {
-            ServicesUrl = servicesUrl;
-            HttpClient = new McmaHttpClient(authenticator);
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            Options = options;
         }
 
-        private string ServicesUrl { get; }
+        private ResourceManagerOptions Options { get; }
 
-        private List<Service> Services { get; } = new List<Service>();
+        private List<ServiceClient> Services { get; } = new List<ServiceClient>();
 
-        private McmaHttpClient HttpClient { get; }
+        private McmaHttpClient HttpClient { get; } = new McmaHttpClient();
 
-        private Service DefaultServiceRegistryService =>
-            new Service
-            {
-                Name = "Service Registry",
-                Resources = new List<ServiceResource>
+        private ServiceClient GetDefaultServiceRegistryServiceClient() =>
+            new ServiceClient(
+                new Service
                 {
-                    new ServiceResource
+                    Name = "Service Registry",
+                    Resources = new List<ResourceEndpoint>
                     {
-                        ResourceType = nameof(Service),
-                        HttpEndpoint = ServicesUrl
+                        new ResourceEndpoint
+                        {
+                            ResourceType = nameof(Service),
+                            HttpEndpoint = Options.ServicesUrl,
+                            AuthType = Options.ServicesAuthType,
+                            AuthContext = Options.ServicesAuthContext
+                        }
                     }
-                }
-            };
+                },
+                Options.AuthProvider
+            );
 
         public async Task InitAsync()
         {
-            Console.WriteLine($"Retrieving services from {ServicesUrl}...");
-
-            var response = (await HttpClient.GetAsync(ServicesUrl)).EnsureSuccessStatusCode();
-
-            Services.AddRange(await response.Content.ReadAsArrayFromJsonAsync<Service>());
-
-            var serviceRegistryPresent = 
-                Services.SelectMany(svc => svc.Resources ?? new ServiceResource[0])
-                    .Any(svcRes => svcRes.ResourceType == nameof(Service));
-
-            if (!serviceRegistryPresent)
-                Services.Add(DefaultServiceRegistryService);
-        }
-
-        private IEnumerable<string> GetUrls<T>((string, string)[] filter = null) 
-        {
-            var serviceResources =
-                Services.SelectMany(svc => svc.Resources ?? new ServiceResource[0])
-                    .Where(svcRes => typeof(T).Name == svcRes.ResourceType);
-
-            foreach (var serviceResource in serviceResources)
+            try
             {
-                var uriBuilder = new UriBuilder(serviceResource.HttpEndpoint);
-                
-                if (filter != null)
-                    uriBuilder.Query = string.Join("&", filter.Select(x => $"{x.Item1}={x.Item2}"));
+                Services.Clear();
 
-                yield return uriBuilder.Uri.ToString();
+                var serviceRegistry = GetDefaultServiceRegistryServiceClient();
+                Services.Add(serviceRegistry);
+
+                var servicesEndpoint = serviceRegistry.GetResourceEndpoint<Service>();
+
+                Logger.Debug($"Retrieving services from {Options.ServicesUrl}...");
+
+                var response = await servicesEndpoint.GetCollectionAsync<Service>(throwIfAnyFailToDeserialize: false);
+
+                Services.AddRange(response.Select(svc => new ServiceClient(svc, Options.AuthProvider)));
+            }
+            catch (Exception error)
+            {
+                throw new Exception("ResourceManager: Failed to initialize", error);
             }
         }
 
@@ -76,19 +73,24 @@ namespace Mcma.Core
                 await InitAsync();
 
             var results = new List<T>();
+            var usedHttpEndpoints = new Dictionary<string, bool>();
 
-            foreach (var serviceResourceUrl in GetUrls<T>(filter))
+            foreach (var resourceEndpoint in Services.Where(s => s.HasResourceEndpoint<T>()).Select(s => s.GetResourceEndpoint<T>()))
             {
                 try
                 {
-                    var response = (await HttpClient.GetAsync(serviceResourceUrl)).EnsureSuccessStatusCode();
+                    if (!usedHttpEndpoints.ContainsKey(resourceEndpoint.Data.HttpEndpoint))
+                    {
+                        var response = await resourceEndpoint.GetCollectionAsync<T>(filter: filter.ToDictionary(x => x.Item1, x => x.Item2));
+                        results.AddRange(response);
+                    }
 
-                    results.AddRange(await response.Content.ReadAsArrayFromJsonAsync<T>());
+                    usedHttpEndpoints[resourceEndpoint.Data.HttpEndpoint] = true;
                 }
-                catch (Exception ex)
+                catch (Exception error)
                 {
-                    Console.WriteLine($"Failed to retrieve '{typeof(T).Name}' from endpoint '{serviceResourceUrl}'.");
-                    Console.WriteLine(ex);
+                    Logger.Error("Failed to retrieve '" + typeof(T).Name + "' from endpoint '" + resourceEndpoint.Data.HttpEndpoint + "'");
+                    Logger.Exception(error);
                 }
             }
 
@@ -100,52 +102,65 @@ namespace Mcma.Core
             if (!Services.Any())
                 await InitAsync();
 
-            
-            foreach (var serviceResourceUrl in GetUrls<T>())
-            {
-                try
-                {
-                    var response = (await HttpClient.PostAsJsonAsync(serviceResourceUrl, resource)).EnsureSuccessStatusCode();
+            var resourceEndpoint = Services.Where(s => s.HasResourceEndpoint<T>()).Select(s => s.GetResourceEndpoint<T>()).FirstOrDefault();
+            if (resourceEndpoint != null)
+                return await resourceEndpoint.PostAsync<T>(resource);
 
-                    return await response.Content.ReadAsObjectFromJsonAsync<T>();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to retrieve '{typeof(T).Name}' from endpoint '{serviceResourceUrl}'.");
-                    Console.WriteLine(ex);
-                }
-            }
-
-            throw new Exception($"Failed to find service to create resource of type '{typeof(T).Name}'." );
+            throw new Exception("ResourceManager: Failed to find service to create resource of type '" + typeof(T).Name + "'.");
         }
 
         public async Task<T> UpdateAsync<T>(T resource) where T : IMcmaResource
         {
-            var response = (await HttpClient.PutAsJsonAsync(resource.Id, resource)).EnsureSuccessStatusCode();
+            if (!Services.Any())
+                await InitAsync();
 
-            return await response.Content.ReadAsObjectFromJsonAsync<T>();
+            var resourceEndpoint =
+                Services.Where(s => s.HasResourceEndpoint<T>())
+                    .Select(s => s.GetResourceEndpoint<T>())
+                    .FirstOrDefault(re => resource.Id.StartsWith(re.Data.HttpEndpoint, StringComparison.OrdinalIgnoreCase));
+            if (resourceEndpoint != null)
+                return await resourceEndpoint.PostAsync<T>(resource);
+
+            var resp = await HttpClient.PutAsJsonAsync(resource.Id, resource);
+            return await resp.Content.ReadAsObjectFromJsonAsync<T>();
         }
 
         public async Task DeleteAsync(IMcmaResource resource)
-            => (await HttpClient.DeleteAsync(resource.Id)).EnsureSuccessStatusCode();
-
-        public async Task SendNotificationAsync<T>(T resource, string notificationEndpoint) where T : IMcmaResource
         {
-            if (!string.IsNullOrWhiteSpace(notificationEndpoint))
-            {
-                var resp = (await HttpClient.GetAsync(notificationEndpoint)).EnsureSuccessStatusCode();
+            if (!Services.Any())
+                await InitAsync();
 
-                await SendNotificationAsync(resource, await resp.Content.ReadAsObjectFromJsonAsync<NotificationEndpoint>());
-            }
+            var resourceEndpoint =
+                Services.Where(s => s.HasResourceEndpoint(resource.Type))
+                    .Select(s => s.GetResourceEndpoint(resource.Type))
+                    .FirstOrDefault(re => resource.Id.StartsWith(re.Data.HttpEndpoint, StringComparison.OrdinalIgnoreCase));
+            if (resourceEndpoint != null)
+                await resourceEndpoint.DeleteAsync(resource.Id);
+            else
+                await HttpClient.DeleteAsync(resource.Id);
+        }
+
+        public async Task<ResourceEndpointClient> GetResourceEndpointAsync(string url)
+        {
+            if (!Services.Any())
+                await InitAsync();
+
+            return Services.SelectMany(s => s.Resources)
+                .FirstOrDefault(re => re.Data.HttpEndpoint.StartsWith(url, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task SendNotificationAsync<T>(T resource, NotificationEndpoint notificationEndpoint) where T : IMcmaResource
         {
             if (!string.IsNullOrWhiteSpace(notificationEndpoint?.HttpEndpoint))
             {
-                var notification = new Notification{Source = resource.Id, Content = resource.ToMcmaJson()};
+                var notification = new Notification {Source = resource.Id, Content = resource.ToMcmaJson()};
 
-                (await HttpClient.PostAsJsonAsync(notificationEndpoint.HttpEndpoint, notification)).EnsureSuccessStatusCode();
+                var resourceEndpoint = await GetResourceEndpointAsync(notificationEndpoint.HttpEndpoint);
+
+                if (resourceEndpoint != null)
+                    await resourceEndpoint.PostAsync(notification, notificationEndpoint.HttpEndpoint);
+                else
+                    (await HttpClient.PostAsJsonAsync(notificationEndpoint.HttpEndpoint, notification)).EnsureSuccessStatusCode();
             }
         }
     }

@@ -9,6 +9,7 @@ using Mcma.Api;
 using Mcma.Aws;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.MediaRepository.ApiHandler
 {
@@ -16,8 +17,8 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
     {
         public static async Task GetBmContentsAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetBmContentsAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetBmContentsAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -25,13 +26,13 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
             response.JsonBody = bmContents.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task AddBmContentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(AddBmContentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(AddBmContentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             dynamic bmContent = request.JsonBody?.ToMcmaObject<BMContent>();
             if (bmContent == null)
@@ -55,13 +56,13 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             response.Headers["Location"] = bmContent.Id;
             response.JsonBody = bmContent.ToMcmaJson();
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task GetBmContentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(GetBmContentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(GetBmContentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -76,13 +77,13 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
                 response.StatusMessage = "No resource found on path '" + request.Path + "'.";
             }
 
-            Console.WriteLine(response.ToMcmaJson().ToString());
+            Logger.Debug(response.ToMcmaJson().ToString());
         }
 
         public static async Task PutBmContentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(PutBmContentAsync));
-            Console.WriteLine(request);
+            Logger.Debug(nameof(PutBmContentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             dynamic bmContent = request.JsonBody?.ToMcmaObject<BMContent>();
             if (bmContent == null)
@@ -107,8 +108,8 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
         public static async Task DeleteBmContentAsync(McmaApiRequest request, McmaApiResponse response)
         {
-            Console.WriteLine(nameof(DeleteBmContentAsync));
-            Console.WriteLine(request.ToMcmaJson().ToString());
+            Logger.Debug(nameof(DeleteBmContentAsync));
+            Logger.Debug(request.ToMcmaJson().ToString());
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

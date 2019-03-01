@@ -13,6 +13,7 @@ using Amazon.S3;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using Amazon.S3.Model;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AmeService.Worker
 {
@@ -22,7 +23,7 @@ namespace Mcma.Aws.AmeService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(AmeServiceWorkerRequest @event)
         {
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
@@ -55,7 +56,7 @@ namespace Mcma.Aws.AmeService.Worker
                 MediaInfoProcess mediaInfoProcess;
                 if (inputFile is HttpEndpointLocator httpEndpointLocator && !string.IsNullOrWhiteSpace(httpEndpointLocator.HttpEndpoint))
                 {
-                    Console.WriteLine("Running MediaInfo against " + httpEndpointLocator.HttpEndpoint);
+                    Logger.Debug("Running MediaInfo against " + httpEndpointLocator.HttpEndpoint);
                     mediaInfoProcess = await MediaInfoProcess.RunAsync("--Output=EBUCore_JSON", httpEndpointLocator.HttpEndpoint);
                 } 
                 else if (inputFile is S3Locator s3Locator && !string.IsNullOrWhiteSpace(s3Locator.AwsS3Bucket) && !string.IsNullOrWhiteSpace(s3Locator.AwsS3Key))
@@ -65,7 +66,7 @@ namespace Mcma.Aws.AmeService.Worker
                     var localFileName = "/tmp/" + Guid.NewGuid().ToString();
                     await s3GetResponse.WriteResponseStreamToFileAsync(localFileName, false, CancellationToken.None);
 
-                    Console.WriteLine("Running MediaInfo against " + localFileName);
+                    Logger.Debug("Running MediaInfo against " + localFileName);
                     mediaInfoProcess = await MediaInfoProcess.RunAsync("--Output=EBUCore_JSON", localFileName);
 
                     File.Delete(localFileName);
@@ -84,11 +85,11 @@ namespace Mcma.Aws.AmeService.Worker
                     ContentType = "application/json"
                 };
 
-                Console.WriteLine($"Writing MediaInfo output to bucket {s3Params.BucketName} with key {s3Params.Key}...");
+                Logger.Debug($"Writing MediaInfo output to bucket {s3Params.BucketName} with key {s3Params.Key}...");
                 var outputS3 = await outputLocation.GetClientAsync();
-                Console.WriteLine($"Got client for bucket {s3Params.BucketName}. Submitting put request...");
+                Logger.Debug($"Got client for bucket {s3Params.BucketName}. Submitting put request...");
                 var putResp = await outputS3.PutObjectAsync(s3Params);
-                Console.WriteLine($"Put request completed with status code {putResp.HttpStatusCode}. Setting job output...");
+                Logger.Debug($"Put request completed with status code {putResp.HttpStatusCode}. Setting job output...");
 
                 var jobOutput = new JobParameterBag();
                 jobOutput["outputFile"] = new S3Locator
@@ -97,13 +98,13 @@ namespace Mcma.Aws.AmeService.Worker
                     AwsS3Key = s3Params.Key
                 };
 
-                Console.WriteLine("Updating job assignment");
+                Logger.Debug("Updating job assignment");
                 await UpdateJobAssignmentWithOutputAsync(table, jobAssignmentId, jobOutput);
                 await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "COMPLETED");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Logger.Exception(ex);
 
                 try
                 {
@@ -111,12 +112,12 @@ namespace Mcma.Aws.AmeService.Worker
                 }
                 catch (Exception innerEx)
                 {
-                    Console.WriteLine(innerEx);
+                    Logger.Exception(innerEx);
                 }
             }
             finally
             {
-                Console.WriteLine("Exiting AmeServiceWorker.ProcessJobAssignmentAsync");
+                Logger.Debug("Exiting AmeServiceWorker.ProcessJobAssignmentAsync");
             }
         }
 

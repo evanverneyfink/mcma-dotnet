@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Api
 {
@@ -141,7 +142,7 @@ namespace Mcma.Api
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Logger.Error(ex.ToString());
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 response.Headers = GetDefaultResponseHeaders();

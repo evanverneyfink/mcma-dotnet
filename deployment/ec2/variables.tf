@@ -1,4 +1,8 @@
-variable "aws_profile" {
+variable "aws_access_key" {
+  description = "INPUT your AWS access_key"
+}
+
+variable "aws_secret_key" {
   description = "INPUT your AWS secret_key"
 }
 
@@ -34,6 +38,10 @@ variable "aws_ec2_private_subnet_cidr" {
 
 variable "aws_account_id" {}
 variable "global_prefix" {}
+
+variable "services_url" {}
+variable "services_auth_type" {}
+variable "services_auth_context" {}
 
 /* Ubuntu 16.04 amis by region */
 variable "amis" {

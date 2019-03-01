@@ -23,7 +23,8 @@ environmentName=com.your-domain.mcma
 environmentType=dev
 
 awsAccountId=<YOUR_AWS_ACCOUNT_ID>
-awsProfile=<YOUR_AWS_PROFILE>
+awsAccessKey=<YOUR_AWS_ACCESS_KEY>
+awsSecretKey=<YOUR_AWS_SECRET_KEY>
 awsRegion=<YOUR_AWS_REGION>
 
 # Optional settings, though without configuration some features may not work

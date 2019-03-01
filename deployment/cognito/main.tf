@@ -1,8 +1,3 @@
-provider "aws" {
-  profile    = "${var.aws_profile}"
-  region     = "${var.aws_region}"
-}
-
 resource "aws_cognito_user_pool" "user_pool" {
   name = "${var.global_prefix}_user_pool"
 }

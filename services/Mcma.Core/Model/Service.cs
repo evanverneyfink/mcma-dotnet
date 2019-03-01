@@ -7,7 +7,11 @@ namespace Mcma.Core
     {
         public string Name { get; set; }
 
-        public ICollection<ServiceResource> Resources { get; set; }
+        public string AuthType { get; set; }
+
+        public string AuthContext { get; set; }
+
+        public ICollection<ResourceEndpoint> Resources { get; set; }
 
         public string JobType { get; set; }
 

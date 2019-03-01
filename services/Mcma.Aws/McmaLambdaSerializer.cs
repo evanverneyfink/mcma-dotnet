@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Amazon.Lambda.Core;
 using Newtonsoft.Json;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws
 {
@@ -21,8 +22,8 @@ namespace Mcma.Aws
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred serializing object of type {typeof(T).FullName}.");
-                Console.WriteLine(ex);
+                Logger.Error($"An error occurred serializing object of type {typeof(T).FullName}.");
+                Logger.Exception(ex);
                 throw;
             }
         }
@@ -35,8 +36,8 @@ namespace Mcma.Aws
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred deserializing object of type {typeof(T).FullName}.");
-                Console.WriteLine(ex);
+                Logger.Error($"An error occurred deserializing object of type {typeof(T).FullName}.");
+                Logger.Exception(ex);
                 throw;
             }
         }

@@ -1,4 +1,13 @@
 /* App servers */
+data "template_file" "cloud_config_app_yml" {
+  template = "${file("ec2/cloud-config/app.yml")}"
+
+  vars {
+    services_url = "${var.services_url}"
+    services_auth_type = "${var.services_auth_type}"
+    services_auth_context = "${var.services_auth_context}"
+  }
+}
 resource "aws_instance" "app" {
   count                   = "${var.aws_instance_count}"
   ami                     = "${lookup(var.amis, var.aws_region)}"

@@ -7,6 +7,7 @@ using Amazon.Lambda.Serialization.Json;
 using Mcma.Api;
 using Mcma.Aws;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 
@@ -33,8 +34,8 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
         public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            Console.WriteLine(request.ToMcmaJson().ToString());
-            Console.WriteLine(context.ToMcmaJson().ToString());
+            Logger.Debug(request.ToMcmaJson().ToString());
+            Logger.Debug(context.ToMcmaJson().ToString());
 
             return Controller.HandleRequestAsync(request, context);
         }

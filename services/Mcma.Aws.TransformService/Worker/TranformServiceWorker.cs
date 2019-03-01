@@ -13,6 +13,7 @@ using Amazon.S3;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using Amazon.S3.Model;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.TransformService.Worker
 {
@@ -23,9 +24,8 @@ namespace Mcma.Aws.TransformService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(TransformServiceWorkerRequest @event)
         {
-            var variables = @event.Request.StageVariables;
-            var resourceManager = new ResourceManager(variables["ServicesUrl"]);
-            var table = new DynamoDbTable(variables["TableName"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             try
@@ -93,7 +93,7 @@ namespace Mcma.Aws.TransformService.Worker
 
                         break;
                     case JOB_PROFILE_CREATE_PROXY_EC2:
-                        var ec2hostname = variables["HostnameInstanceEC2"];
+                        var ec2hostname = @event.Request.StageVariables["HostnameInstanceEC2"];
 
                         var ec2Url = "http://" + ec2hostname + "/new-transform-job";
 
@@ -103,16 +103,16 @@ namespace Mcma.Aws.TransformService.Worker
                             notificationEndpoint = new NotificationEndpoint {HttpEndpoint = jobAssignmentId + "/notifications"}
                         };
 
-                        Console.WriteLine("Sending to", ec2Url, "message", message);
+                        Logger.Debug("Sending to", ec2Url, "message", message);
                         var mcmaHttp = new McmaHttpClient();
                         await mcmaHttp.PostAsJsonAsync(ec2Url, message);
-                        Console.WriteLine("Done");
+                        Logger.Debug("Done");
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Logger.Exception(ex);
 
                 try
                 {
@@ -120,12 +120,12 @@ namespace Mcma.Aws.TransformService.Worker
                 }
                 catch (Exception innerEx)
                 {
-                    Console.WriteLine(innerEx);
+                    Logger.Exception(innerEx);
                 }
             }
             finally
             {
-                Console.WriteLine("Exiting TransformServiceWorker.ProcessJobAssignmentAsync");
+                Logger.Debug("Exiting TransformServiceWorker.ProcessJobAssignmentAsync");
             }
         }
 
@@ -148,7 +148,7 @@ namespace Mcma.Aws.TransformService.Worker
 
             await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
         }

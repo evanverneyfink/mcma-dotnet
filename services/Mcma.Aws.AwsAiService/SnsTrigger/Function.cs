@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using Mcma.Aws;
 using Mcma.Core.Serialization;
 using System.Text;
+using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 
@@ -35,7 +36,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
                         throw new Exception("The payload doesn't contain expectd data: Sns.Message");
 
                     dynamic message = JToken.Parse(record.Sns.Message);
-                    Console.WriteLine($"SNS Message ==> {message}");
+                    Logger.Debug($"SNS Message ==> {message}");
 
                     var rekoJobId = message.JobId;
                     var rekoJobType = message.API;
@@ -47,10 +48,10 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
 
                     var jobAssignmentId = Encoding.UTF8.GetString(BitConverter.GetBytes(jt));
 
-                    Console.WriteLine($"rekoJobId: {rekoJobId}");
-                    Console.WriteLine($"rekoJobType: {rekoJobType}");
-                    Console.WriteLine($"status: {status}");
-                    Console.WriteLine($"jobAssignmentId: {jobAssignmentId}");
+                    Logger.Debug($"rekoJobId: {rekoJobId}");
+                    Logger.Debug($"rekoJobType: {rekoJobType}");
+                    Logger.Debug($"status: {status}");
+                    Logger.Debug($"jobAssignmentId: {jobAssignmentId}");
 
                     var invokeParams = new InvokeRequest
                     {
@@ -76,7 +77,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
                 }
                 catch (Exception error)
                 {
-                    Console.WriteLine($"Failed processing record.\r\nRecord:\r\n{record.ToMcmaJson()}\r\nError:\r\n{error}");
+                    Logger.Error($"Failed processing record.\r\nRecord:\r\n{record.ToMcmaJson()}\r\nError:\r\n{error}");
                 }
             }
         }

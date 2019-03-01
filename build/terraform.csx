@@ -3,10 +3,12 @@
 
 public class Terraform : CmdTask
 {
+    public static string Path { get; set; } = "terraform";
+
     public static string DefaultProjectDir { get; set; } = string.Empty;
 
     public Terraform(string command, params string[] additionalArgs)
-        : base("terraform", string.Join(" ", new[] {command, string.Join(" ", additionalArgs)}))
+        : base(Path, string.Join(" ", new[] {command, string.Join(" ", additionalArgs)}))
     {
         ProcessStartInfo.WorkingDirectory = DefaultProjectDir;
     }

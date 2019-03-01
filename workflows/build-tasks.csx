@@ -25,3 +25,29 @@ public static readonly IBuildTask BuildWorkflows = new AggregateTask(
     BuildCommonSteps,
     BuildConformWorkflow
 );
+
+public static readonly IBuildTask BuildCommonStepsSln = new AggregateTask(
+    new BuildProject("workflows/ProcessWorkflowCompletion", false, false),
+    new BuildProject("workflows/ProcessWorkflowFailure", false, false),
+    new BuildProject("workflows/WorkflowActivityCallbackHandler", false, false)
+);
+
+public static readonly IBuildTask BuildConformWorkflowSln = new AggregateTask(
+    new BuildProject("workflows/conform/01-ValidateWorkflowInput", false, false),
+    new BuildProject("workflows/conform/02-MoveContentToFileRepository", false, false),
+    new BuildProject("workflows/conform/03-CreateMediaAsset", false, false),
+    new BuildProject("workflows/conform/04-ExtractTechnicalMetadata", false, false),
+    new BuildProject("workflows/conform/05-RegisterTechnicalMetadata", false, false),
+    new BuildProject("workflows/conform/06-DecideTranscodeRequirements", false, false),
+    new BuildProject("workflows/conform/07a-ShortTranscode", false, false),
+    new BuildProject("workflows/conform/07b-LongTranscode", false, false),
+    new BuildProject("workflows/conform/08-RegisterProxyEssence", false, false),
+    new BuildProject("workflows/conform/09-CopyProxyToWebsiteStorage", false, false),
+    new BuildProject("workflows/conform/10-RegisterProxyWebsiteLocator", false, false),
+    new BuildProject("workflows/conform/11-StartAiWorkflow", false, false)
+);
+
+public static readonly IBuildTask BuildWorkflowsSln = new AggregateTask(
+    BuildCommonStepsSln,
+    BuildConformWorkflowSln
+);

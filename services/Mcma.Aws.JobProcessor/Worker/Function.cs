@@ -6,6 +6,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.Json;
 using Mcma.Core.Serialization;
 using Mcma.Aws;
+using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 
@@ -15,8 +16,8 @@ namespace Mcma.Aws.JobProcessor.Worker
     {
         public async Task Handler(JobProcessorWorkerRequest @event, ILambdaContext context)
         {
-            Console.WriteLine(@event.ToMcmaJson().ToString());
-            Console.WriteLine(context.ToMcmaJson().ToString());
+            Logger.Debug(@event.ToMcmaJson().ToString());
+            Logger.Debug(context.ToMcmaJson().ToString());
 
             switch (@event.Action)
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mcma.Core.Logging;
 
 namespace Mcma.Core.Serialization
 {
@@ -10,7 +11,7 @@ namespace Mcma.Core.Serialization
 
         public static void Add<T>()
         {
-            Console.WriteLine("Adding MCMA type " + typeof(T).Name);
+            Logger.Debug("Adding MCMA type " + typeof(T).Name);
             if (!Types.Contains(typeof(T)))
                 Types.Add(typeof(T));
         }

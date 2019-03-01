@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Amazon.Lambda.Core;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.JobRepository.Worker
 {
@@ -16,7 +17,7 @@ namespace Mcma.Aws.JobRepository.Worker
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
             var job = await table.GetAsync<Job>(jobId);
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             try
             {
@@ -51,7 +52,7 @@ namespace Mcma.Aws.JobRepository.Worker
             }
             catch (Exception error)
             {
-                Console.WriteLine(error);
+                Logger.Exception(error);
             }
         }
 
@@ -68,7 +69,7 @@ namespace Mcma.Aws.JobRepository.Worker
             // not updating job if it already was marked as completed or failed.
             if (job.Status == "COMPLETED" || job.Status == "FAILED")
             {
-                Console.WriteLine("Ignoring update of job that tried to change state from " + job.Status + " to " + notificationJob.Status);
+                Logger.Warn("Ignoring update of job that tried to change state from " + job.Status + " to " + notificationJob.Status);
                 return;
             }
 
@@ -80,7 +81,7 @@ namespace Mcma.Aws.JobRepository.Worker
 
             await table.PutAsync<Job>(jobId, job);
 
-            var resourceManager = new ResourceManager(@event.Request.StageVariables["ServicesUrl"]);
+            var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(job, job.NotificationEndpoint);
         }
