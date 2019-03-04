@@ -46,9 +46,12 @@ namespace Mcma.Core.Serialization
 
             foreach (var property in value.GetType().GetProperties().Where(p => p.Name != nameof(IMcmaObject.Type) && p.CanRead))
             {
+                var propValue = property.GetValue(value);
+                if (propValue == null && serializer.NullValueHandling == NullValueHandling.Ignore)
+                    continue;
+                
                 writer.WritePropertyName(char.ToLower(property.Name[0]) + property.Name.Substring(1));
-
-                serializer.Serialize(writer, property.GetValue(value));
+                serializer.Serialize(writer, propValue);
             }
 
             writer.WriteEndObject();

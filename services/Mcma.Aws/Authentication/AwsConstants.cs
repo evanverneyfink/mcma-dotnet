@@ -49,6 +49,6 @@ namespace Mcma.Aws.Authentication
             public const string ScopeTerminator = "aws4_request";
         }
 
-        public const string AWSV4 = "AWSV4";
+        public const string AWS4 = "AWS4";
     }
 }

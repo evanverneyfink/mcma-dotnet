@@ -107,6 +107,7 @@ export class WorkflowService {
             jobInput: new JobParameterBag({
                 metadata: metadata,
                 inputFile: new Locator({
+                    '@type': 'S3Locator',
                     awsS3Bucket: uploadBucket,
                     awsS3Key: objectKey
                 })

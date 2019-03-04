@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.Workflows.Conform.LongTranscode
 {

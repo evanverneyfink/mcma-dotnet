@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Mcma.Core\Mcma.Core.csproj" />
     <ProjectReference Include="..\..\Mcma.Aws\Mcma.Aws.csproj" />
+    <ProjectReference Include="..\..\Mcma.Worker\Mcma.Worker.csproj" />
   </ItemGroup>
 
   <ItemGroup>

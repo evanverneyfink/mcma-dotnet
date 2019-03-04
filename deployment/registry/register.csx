@@ -6,7 +6,8 @@
 #r "nuget:AWSSDK.CognitoIdentityProvider, 3.3.11.22"
 #r "nuget:AWSSDK.Extensions.CognitoAuthentication, 0.9.4"
 #r "nuget:AWSSDK.S3, 3.3.29"
-#r "../../services/Mcma.Core/bin/Debug/netstandard2.0/Mcma.Core.dll"
+
+#r "../../services/Mcma.Core/dist/staging/Mcma.Core.dll"
 
 using Amazon;
 using Amazon.Runtime;
@@ -16,6 +17,7 @@ using Amazon.Extensions.CognitoAuthentication;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Newtonsoft.Json.Linq;
+
 using Mcma.Core;
 
 public class UpdateServiceRegistry : BuildTask
@@ -304,12 +306,12 @@ public class UpdateServiceRegistry : BuildTask
             Name = "Service Registry",
             Resources = new[]
             {
-                new ServiceResource {ResourceType = nameof(Service), HttpEndpoint = servicesUrl},
-                new ServiceResource {ResourceType = nameof(JobProfile), HttpEndpoint = jobProfilesUrl}
+                new ResourceEndpoint {ResourceType = nameof(Service), HttpEndpoint = servicesUrl},
+                new ResourceEndpoint {ResourceType = nameof(JobProfile), HttpEndpoint = jobProfilesUrl}
             }
         };
 
-        var resourceManager = new ResourceManager(servicesUrl);
+        var resourceManager = new ResourceManager(new ResourceManagerOptions(servicesUrl));
         
         Console.WriteLine("Getting existing services...");
         var retrievedServices = await resourceManager.GetAsync<Service>();
@@ -431,57 +433,54 @@ public class UpdateServiceRegistry : BuildTask
             switch (prop)
             {
                 case "ame_service_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "MediaInfo AME Service",
+                        Resources = new[]
                         {
-                            Name = "MediaInfo AME Service",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = nameof(JobAssignment), HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
-                            },
-                            JobType = nameof(AmeJob),
-                            JobProfiles = new string[]
-                            {
-                                JOB_PROFILES["ExtractTechnicalMetadata"].Id
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = nameof(JobAssignment), HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
+                        },
+                        JobType = nameof(AmeJob),
+                        JobProfiles = new string[]
+                        {
+                            JOB_PROFILES["ExtractTechnicalMetadata"].Id
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
                 case "aws_ai_service_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "AWS AI Service",
+                        Resources = new[]
                         {
-                            Name = "AWS AI Service",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
-                            },
-                            JobType = nameof(AIJob),
-                            JobProfiles = new string[]
-                            {
-                                JOB_PROFILES["AWSTranscribeAudio"].Id,
-                                JOB_PROFILES["AWSTranslateText"].Id,
-                                JOB_PROFILES["AWSDetectCelebrities"].Id
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
+                        },
+                        JobType = nameof(AIJob),
+                        JobProfiles = new string[]
+                        {
+                            JOB_PROFILES["AWSTranscribeAudio"].Id,
+                            JOB_PROFILES["AWSTranslateText"].Id,
+                            JOB_PROFILES["AWSDetectCelebrities"].Id
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
                 case "azure_ai_service_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "AZURE AI Service",
+                        Resources = new[]
                         {
-                            Name = "AZURE AI Service",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
-                            },
-                            JobType = nameof(AIJob),
-                            JobProfiles = new[]
-                            {
-                                JOB_PROFILES["AzureExtractAllAIMetadata"].Id
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
+                        },
+                        JobType = nameof(AIJob),
+                        JobProfiles = new[]
+                        {
+                            JOB_PROFILES["AzureExtractAllAIMetadata"].Id
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
                 case "job_processor_service_url":
                     serviceList.Add(new Service
@@ -489,8 +488,9 @@ public class UpdateServiceRegistry : BuildTask
                         Name = "Job Processor Service",
                         Resources = new[]
                         {
-                            new ServiceResource {ResourceType = nameof(JobProcess), HttpEndpoint = serviceUrls[prop] + "/job-processes"}
-                        }
+                            new ResourceEndpoint {ResourceType = nameof(JobProcess), HttpEndpoint = serviceUrls[prop] + "/job-processes"}
+                        },
+                        AuthType = "AWS4"
                     });
                     break;
                 case "job_repository_url":
@@ -499,72 +499,62 @@ public class UpdateServiceRegistry : BuildTask
                         Name = "Job Repository",
                         Resources = new[]
                         {
-                            new ServiceResource {ResourceType = "AmeJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = "AIJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = "CaptureJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = "QAJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = "TransferJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = "TransformJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
-                            new ServiceResource {ResourceType = nameof(WorkflowJob), HttpEndpoint = serviceUrls[prop] + "/jobs"}
-                        }
+                            new ResourceEndpoint {ResourceType = "AmeJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = "AIJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = "CaptureJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = "QAJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = "TransferJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = "TransformJob", HttpEndpoint = serviceUrls[prop] + "/jobs"},
+                            new ResourceEndpoint {ResourceType = nameof(WorkflowJob), HttpEndpoint = serviceUrls[prop] + "/jobs"}
+                        },
+                        AuthType = "AWS4"
                     });
                     break;
                 case "media_repository_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "Media Repository",
+                        Resources = new[]
                         {
-                            Name = "Media Repository",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = "BMContent", HttpEndpoint = serviceUrls[prop] + "/bm-contents"},
-                                new ServiceResource {ResourceType = "BMEssence", HttpEndpoint = serviceUrls[prop] + "/bm-essences"}
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = "BMContent", HttpEndpoint = serviceUrls[prop] + "/bm-contents"},
+                            new ResourceEndpoint {ResourceType = "BMEssence", HttpEndpoint = serviceUrls[prop] + "/bm-essences"}
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
                 case "transform_service_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "FFmpeg TransformService",
+                        Resources = new[]
                         {
-                            Name = "FFmpeg TransformService",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
-                            },
-                            JobType = nameof(TransformJob),
-                            JobProfiles = new string[]
-                            {
-                                JOB_PROFILES["CreateProxyLambda"].Id,
-                                JOB_PROFILES["CreateProxyEC2"].Id
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = "JobAssignment", HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
+                        },
+                        JobType = nameof(TransformJob),
+                        JobProfiles = new string[]
+                        {
+                            JOB_PROFILES["CreateProxyLambda"].Id,
+                            JOB_PROFILES["CreateProxyEC2"].Id
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
                 case "workflow_service_url":
-                    serviceList.Add(
-                        new Service
+                    serviceList.Add(new Service
+                    {
+                        Name = "Workflow Service",
+                        Resources = new[]
                         {
-                            Name = "Workflow Service",
-                            Resources = new[]
-                            {
-                                new ServiceResource {ResourceType = nameof(JobAssignment), HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
-                            },
-                            JobType = nameof(WorkflowJob),
-                            JobProfiles = new string[]
-                            {
-                                JOB_PROFILES["ConformWorkflow"].Id,
-                                JOB_PROFILES["AiWorkflow"].Id
-                                // ],
-                                // [
-                                //     new MCMA_CORE.Locator({ "HttpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                                //     new MCMA_CORE.Locator({ "HttpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                                // ],
-                                // [
-                                //     new MCMA_CORE.Locator({ "HttpEndpoint" : serviceUrls.publicBucketUrl, "awsS3Bucket": serviceUrls.publicBucket }),
-                                //     new MCMA_CORE.Locator({ "HttpEndpoint" : serviceUrls.privateBucketUrl, "awsS3Bucket": serviceUrls.privateBucket })
-                            }
-                        }
-                    );
+                            new ResourceEndpoint {ResourceType = nameof(JobAssignment), HttpEndpoint = serviceUrls[prop] + "/job-assignments"}
+                        },
+                        JobType = nameof(WorkflowJob),
+                        JobProfiles = new string[]
+                        {
+                            JOB_PROFILES["ConformWorkflow"].Id,
+                            JOB_PROFILES["AiWorkflow"].Id
+                        },
+                        AuthType = "AWS4"
+                    });
                     break;
             }
         }

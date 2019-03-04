@@ -23,7 +23,7 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AwsAiService.Worker
 {
-    internal static class AwsAiServiceWorker
+    internal class AwsAiServiceWorker : Mcma.Worker.Worker<AwsAiServiceWorkerRequest>
     {
         public const string JOB_PROFILE_TRANSCRIBE_AUDIO = "AWSTranscribeAudio";
         public const string JOB_PROFILE_TRANSLATE_TEXT = "AWSTranslateText";
@@ -31,6 +31,14 @@ namespace Mcma.Aws.AwsAiService.Worker
 
         private static string REKO_SNS_ROLE_ARN = Environment.GetEnvironmentVariable("REKO_SNS_ROLE_ARN");
         private static string SNS_TOPIC_ARN = Environment.GetEnvironmentVariable("SNS_TOPIC_ARN");
+
+        protected override IDictionary<string, Func<AwsAiServiceWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<AwsAiServiceWorkerRequest, Task>>
+            {
+                ["ProcessJobAssignment"] = ProcessJobAssignmentAsync,
+                ["ProcessTranscribeResult"] = ProcessTranscribeResultAsync,
+                ["ProcessRekognitionResult"] = ProcessRekognitionResultAsync
+            };
 
         internal static async Task ProcessJobAssignmentAsync(AwsAiServiceWorkerRequest @event)
         {
@@ -115,7 +123,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                         }
                         catch (Exception error)
                         {
-                            throw new Exception($"Unable to read file in bucket '{s3Bucket}' with key '{s3Key}' due to error: " + error.Message);
+                            throw new Exception($"Unable to read file in bucket '{s3Bucket}' with key '{s3Key}'.", error);
                         }
 
                         var inputText = await new StreamReader(s3Object.ResponseStream).ReadToEndAsync();
@@ -191,7 +199,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.ToString());
                 }
                 catch (Exception innerEx)
                 {
@@ -233,7 +241,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception error)
                 {
-                    throw new Exception("Unable to copy output file to bucket '" + s3Bucket + "' with key'" + s3Key + "' due to error: " + error.Message);
+                    throw new Exception("Unable to copy output file to bucket '" + s3Bucket + "' with key'" + s3Key + "'", error);
                 }
 
                 var jobOutput = new JobParameterBag();
@@ -252,7 +260,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.ToString());
                 }
                 catch (Exception innerError)
                 {
@@ -272,7 +280,8 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
             catch (Exception error)
             {
-                Logger.Error("Failed to cleanup transcribe output file due to error: " + error.Message);
+                Logger.Error("Failed to cleanup transcribe output file.");
+                Logger.Exception(error);
             }
         }
 
@@ -348,7 +357,8 @@ namespace Mcma.Aws.AwsAiService.Worker
                 }
                 catch (Exception error)
                 {
-                    Logger.Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "' due to error: " + error.Message);
+                    Logger.Error("Unable to write output file to bucket '" + s3Bucket + "' with key '" + newS3Key + "'");
+                    Logger.Exception(error);
                 }
 
                 var jobOutput = new JobParameterBag();
@@ -367,7 +377,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.ToString());
                 }
                 catch (Exception innerError)
                 {

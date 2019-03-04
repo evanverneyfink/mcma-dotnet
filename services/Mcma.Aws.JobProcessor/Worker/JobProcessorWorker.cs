@@ -5,11 +5,20 @@ using Amazon.Lambda.Core;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using System.Collections.Generic;
 
 namespace Mcma.Aws.JobProcessor.Worker
 {
-    internal static class JobProcessorWorker
+    internal class JobProcessorWorker : Mcma.Worker.Worker<JobProcessorWorkerRequest>
     {
+        protected override IDictionary<string, Func<JobProcessorWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<JobProcessorWorkerRequest, Task>>
+            {
+                ["CreateJobAssignment"] = CreateJobAssignmentAsync,
+                ["DeleteJobAssignment"] = DeleteJobAssignmentAsync,
+                ["ProcessNotification"] = ProcessNotificationAsync
+            };
+
         internal static async Task CreateJobAssignmentAsync(JobProcessorWorkerRequest @event)
         {
             Logger.Debug("Creating job assignment for job process " + @event.JobProcessId);
@@ -137,7 +146,7 @@ namespace Mcma.Aws.JobProcessor.Worker
             catch (Exception error)
             {
                 jobProcess.Status = "FAILED";
-                jobProcess.StatusMessage = error.Message;
+                jobProcess.StatusMessage = error.ToString();
             }
 
             jobProcess.DateModified = DateTime.UtcNow;

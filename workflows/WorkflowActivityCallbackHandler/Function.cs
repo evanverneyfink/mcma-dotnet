@@ -17,6 +17,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
 {

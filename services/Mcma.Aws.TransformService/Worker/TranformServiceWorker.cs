@@ -17,10 +17,17 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Aws.TransformService.Worker
 {
-    internal static class TransformServiceWorker
+    internal class TransformServiceWorker : Mcma.Worker.Worker<TransformServiceWorkerRequest>
     {
         public const string JOB_PROFILE_CREATE_PROXY_LAMBDA = "CreateProxyLambda";
         public const string JOB_PROFILE_CREATE_PROXY_EC2 = "CreateProxyEC2";
+
+        protected override IDictionary<string, Func<TransformServiceWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<TransformServiceWorkerRequest, Task>>
+            {
+                ["ProcessJobAssignment"] = ProcessJobAssignmentAsync,
+                ["ProcessNotification"] = ProcessNotificationAsync
+            };
 
         internal static async Task ProcessJobAssignmentAsync(TransformServiceWorkerRequest @event)
         {
@@ -116,7 +123,7 @@ namespace Mcma.Aws.TransformService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.ToString());
                 }
                 catch (Exception innerEx)
                 {
@@ -129,7 +136,7 @@ namespace Mcma.Aws.TransformService.Worker
             }
         }
 
-        public static async Task ProcessNotificationAsync(TransformServiceWorkerRequest @event)
+        internal static async Task ProcessNotificationAsync(TransformServiceWorkerRequest @event)
         {
             var jobAssignmentId = @event.JobAssignmentId;
             var notification = @event.Notification;

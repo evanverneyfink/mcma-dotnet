@@ -8,13 +8,21 @@ using Newtonsoft.Json.Linq;
 using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Mcma.Core.Serialization;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.WorkflowService.Worker
 {
-    internal static class WorkflowServiceWorker
+    internal class WorkflowServiceWorker : Mcma.Worker.Worker<WorkflowServiceWorkerRequest>
     {
         private const string JOB_PROFILE_CONFORM_WORKFLOW = "ConformWorkflow";
         private const string JOB_PROFILE_AI_WORKFLOW = "AiWorkflow";
+
+        protected override IDictionary<string, Func<WorkflowServiceWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<WorkflowServiceWorkerRequest, Task>>
+            {
+                ["ProcessJobAssignment"] = ProcessJobAssignmentAsync,
+                ["ProcessNotification"] = ProcessNotificationAsync
+            };
 
         internal static async Task ProcessJobAssignmentAsync(WorkflowServiceWorkerRequest @event)
         {
@@ -72,14 +80,14 @@ namespace Mcma.Aws.WorkflowService.Worker
             }
             catch (Exception error)
             {
-                Console.Error.WriteLine(error);
+                Logger.Exception(error);
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.ToString());
                 }
                 catch (Exception innerError)
                 {
-                    Console.Error.WriteLine(innerError);
+                    Logger.Exception(innerError);
                 }
             }
         }

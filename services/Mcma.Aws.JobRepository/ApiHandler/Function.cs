@@ -9,6 +9,7 @@ using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.JobRepository.ApiHandler
 {

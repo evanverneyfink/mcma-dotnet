@@ -12,6 +12,7 @@ using Mcma.Core.Serialization;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.Workflows.Conform.ValidateWorkflowInput
 {
@@ -75,7 +76,7 @@ namespace Mcma.Aws.Workflows.Conform.ValidateWorkflowInput
             }
             catch (Exception error)
             {
-                throw new Exception("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "' due to error: " + error.Message);
+                throw new Exception("Unable to read input file in bucket '" + s3Bucket + "' with key '" + s3Key + "'.", error);
             }
 
             return JObject.FromObject(data.Metadata.Keys.ToDictionary(k => k, k => data.Metadata[k]));

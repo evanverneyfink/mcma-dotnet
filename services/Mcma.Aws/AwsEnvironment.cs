@@ -36,7 +36,7 @@ namespace Mcma.Aws
             => new AwsAuthenticatorProvider(
                 new Dictionary<string, string>
                 {
-                    [AwsConstants.AWSV4] = GetAwsV4DefaultAuthContext().ToMcmaJson().ToString()
+                    [AwsConstants.AWS4] = GetAwsV4DefaultAuthContext().ToMcmaJson().ToString()
                 });
 
         public static ResourceManagerOptions GetAwsV4ResourceManagerOptions()

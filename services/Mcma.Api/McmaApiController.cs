@@ -52,7 +52,7 @@ namespace Mcma.Api
                     catch (Exception ex)
                     {
                         response.StatusCode = (int)HttpStatusCode.BadRequest;
-                        response.JsonBody = new McmaApiError(response.StatusCode, ex.Message, request.Path).ToMcmaJson();
+                        response.JsonBody = new McmaApiError(response.StatusCode, ex.ToString(), request.Path).ToMcmaJson();
                         requestBodyOk = false;
                     }
                 }
@@ -146,7 +146,7 @@ namespace Mcma.Api
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 response.Headers = GetDefaultResponseHeaders();
-                response.JsonBody = new McmaApiError(response.StatusCode, ex.Message, request.Path).ToMcmaJson();
+                response.JsonBody = new McmaApiError(response.StatusCode, ex.ToString(), request.Path).ToMcmaJson();
             }
 
             if (response.JsonBody != null)

@@ -13,6 +13,7 @@ using Mcma.Core.Serialization;
 using Newtonsoft.Json.Linq;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.Workflows.Conform.CreateMediaAsset
 {

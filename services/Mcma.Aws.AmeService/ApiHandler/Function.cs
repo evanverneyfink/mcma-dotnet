@@ -9,6 +9,7 @@ using Mcma.Aws;
 using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.AmeService.ApiHandler
 {

@@ -9,7 +9,10 @@ namespace Mcma.Core
         {
             Data = service;
 
-            ResourcesByType = service.Resources.ToDictionary(r => r.ResourceType, r => new ResourceEndpointClient(r, authProvider, service.AuthType, service.AuthContext));
+            ResourcesByType =
+                service.Resources != null
+                    ? service.Resources.ToDictionary(r => r.ResourceType, r => new ResourceEndpointClient(r, authProvider, service.AuthType, service.AuthContext))
+                    : new Dictionary<string, ResourceEndpointClient>();
         }
 
         public Service Data { get; }

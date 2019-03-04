@@ -7,8 +7,10 @@ using Amazon.Lambda.Serialization.Json;
 using Mcma.Core.Serialization;
 using Mcma.Aws;
 using Mcma.Core.Logging;
+using Mcma.Worker;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.JobProcessor.Worker
 {
@@ -19,21 +21,7 @@ namespace Mcma.Aws.JobProcessor.Worker
             Logger.Debug(@event.ToMcmaJson().ToString());
             Logger.Debug(context.ToMcmaJson().ToString());
 
-            switch (@event.Action)
-            {
-                case "createJobAssignment":
-                    await JobProcessorWorker.CreateJobAssignmentAsync(@event);
-                    break;
-                case "deleteJobAssignment":
-                    await JobProcessorWorker.DeleteJobAssignmentAsync(@event);
-                    break;
-                case "processNotification":
-                    await JobProcessorWorker.ProcessNotificationAsync(@event);
-                    break;
-                default:
-                    Console.Error.WriteLine("No handler implemented for action '" + @event.Action + "'.");
-                    break;
-            }
+            await McmaWorker.DoWorkAsync<JobProcessorWorker, JobProcessorWorkerRequest>(@event.Action, @event);
         }
     }
 }

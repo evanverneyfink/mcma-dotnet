@@ -2,7 +2,8 @@
 #load "../../build/task.csx"
 
 #r "nuget:Newtonsoft.Json, 11.0.2"
-#r "../../services/Mcma.Core/bin/Debug/netstandard2.0/Mcma.Core.dll"
+
+#r "../../services/Mcma.Core/dist/staging/Mcma.Core.dll"
 
 using System.Threading.Tasks;
 using Mcma.Core;
@@ -29,9 +30,9 @@ public class ClearServiceRegistry : BuildTask
         var content = File.ReadAllText($"{Build.Dirs.Deployment.TrimEnd('/')}/terraform.output");
         var terraformOutput = ParseContent(content);
         
-        var servicesUrl = $"{terraformOutput["service_registry_url"]}/services";
+        var servicesUrl = terraformOutput["services_url"];
 
-        var resourceManager = new ResourceManager(servicesUrl);
+        var resourceManager = new ResourceManager(new ResourceManagerOptions(servicesUrl));
         await resourceManager.InitAsync();
 
         foreach (var jobProfile in await resourceManager.GetAsync<JobProfile>())

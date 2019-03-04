@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using Mcma.Core.Logging;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.AwsAiService.S3Trigger
 {

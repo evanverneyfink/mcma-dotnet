@@ -17,9 +17,15 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AmeService.Worker
 {
-    internal static class AmeServiceWorker
+    internal class AmeServiceWorker : Mcma.Worker.Worker<AmeServiceWorkerRequest>
     {
         public const string JOB_PROFILE_EXTRACT_TECHNICAL_METADATA = "ExtractTechnicalMetadata";
+
+        protected override IDictionary<string, Func<AmeServiceWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<AmeServiceWorkerRequest, Task>>
+            {
+                ["ProcessJobAssignment"] = ProcessJobAssignmentAsync
+            };
 
         internal static async Task ProcessJobAssignmentAsync(AmeServiceWorkerRequest @event)
         {
@@ -108,7 +114,7 @@ namespace Mcma.Aws.AmeService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.ToString());
                 }
                 catch (Exception innerEx)
                 {

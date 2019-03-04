@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Mcma.Core.Utility;
 
 namespace Mcma.Core
 {
@@ -39,12 +40,14 @@ namespace Mcma.Core
 
         private Task<HttpResponseMessage> SendAsync(string url, HttpMethod method, IDictionary<string, string> headers, HttpContent body)
         {
+            url = url ?? string.Empty;
+
             if (!string.IsNullOrWhiteSpace(BaseUrl))
             {
                 if (string.IsNullOrWhiteSpace(url))
                     url = BaseUrl;
                 else if (url.IndexOf("http://") != 0 || url.IndexOf("https://") != 0)
-                    url = BaseUrl + url;
+                    url = BaseUrl + url.Replace(BaseUrl, string.Empty, StringComparison.OrdinalIgnoreCase);
                 else if (!url.StartsWith(BaseUrl))
                     throw new Exception($"HttpClient: Making " + method + " request to URL '" + url + "' which does not match BaseUrl '" + BaseUrl + "'");
             }

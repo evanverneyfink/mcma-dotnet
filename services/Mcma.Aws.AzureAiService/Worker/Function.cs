@@ -7,8 +7,10 @@ using Amazon.Lambda.Serialization.Json;
 using Mcma.Aws;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using Mcma.Worker;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
+[assembly: McmaLambdaLogger]
 
 namespace Mcma.Aws.AzureAiService.Worker
 {
@@ -19,18 +21,7 @@ namespace Mcma.Aws.AzureAiService.Worker
             Logger.Debug(@event.ToMcmaJson().ToString());
             Logger.Debug(context.ToMcmaJson().ToString());
 
-            switch (@event.Action)
-            {
-                case "ProcessJobAssignment":
-                    await AzureAiServiceWorker.ProcessJobAssignmentAsync(@event);
-                    break;
-                case "ProcessNotification":
-                    await AzureAiServiceWorker.ProcessNotificationAsync(@event);
-                    break;
-                default:
-                    Console.Error.WriteLine("No handler implemented for action '" + @event.Action + "'.");
-                    break;
-            }
+            await McmaWorker.DoWorkAsync<AzureAiServiceWorker, AzureAiServiceWorkerRequest>(@event.Action, @event);
         }
     }
 }

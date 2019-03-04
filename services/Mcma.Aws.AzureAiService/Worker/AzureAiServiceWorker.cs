@@ -17,26 +17,7 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Aws.AzureAiService.Worker
 {
-    internal class AzureConfig
-    {
-        public AzureConfig(AzureAiServiceWorkerRequest @event)
-        {
-            ApiUrl = @event.Request.StageVariables["AzureApiUrl"];
-            Location = @event.Request.StageVariables["AzureLocation"];
-            AccountID = @event.Request.StageVariables["AzureAccountID"];
-            SubscriptionKey = @event.Request.StageVariables["AzureSubscriptionKey"];
-        }
-
-        public string ApiUrl { get; }
-
-        public string Location { get; }
-
-        public string AccountID { get; }
-
-        public string SubscriptionKey { get; }
-    }
-
-    internal static class AzureAiServiceWorker
+    internal class AzureAiServiceWorker : Mcma.Worker.Worker<AzureAiServiceWorkerRequest>
     {
         public const string JOB_PROFILE_TRANSCRIBE_AUDIO = "AzureTranscribeAudio";
         public const string JOB_PROFILE_TRANSLATE_TEXT = "AzureTranslateText";
@@ -44,6 +25,13 @@ namespace Mcma.Aws.AzureAiService.Worker
 
         private static string REKO_SNS_ROLE_ARN = Environment.GetEnvironmentVariable("REKO_SNS_ROLE_ARN");
         private static string SNS_TOPIC_ARN = Environment.GetEnvironmentVariable("SNS_TOPIC_ARN");
+
+        protected override IDictionary<string, Func<AzureAiServiceWorkerRequest, Task>> Operations { get; } =
+            new Dictionary<string, Func<AzureAiServiceWorkerRequest, Task>>
+            {
+                ["ProcessJobAssignment"] = ProcessJobAssignmentAsync,
+                ["ProcessNotification"] = ProcessNotificationAsync
+            };
 
         internal static async Task ProcessJobAssignmentAsync(AzureAiServiceWorkerRequest @event)
         {
@@ -162,7 +150,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", ex.ToString());
                 }
                 catch (Exception innerEx)
                 {
@@ -251,7 +239,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
                 try
                 {
-                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.Message);
+                    await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "FAILED", error.ToString());
                 }
                 catch (Exception innerEx)
                 {

@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Register script debug",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "dotnet",
+            "args": [
+              "exec",
+              "C:/Users/evanv/.dotnet/tools/.store/dotnet-script/0.26.1/dotnet-script/0.26.1/tools/netcoreapp2.1/any/dotnet-script.dll",
+              "build.csx",
+              "--",
+              "register"
+            ],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": true
+        }
+    ]
+}

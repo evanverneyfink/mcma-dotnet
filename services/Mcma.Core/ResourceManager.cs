@@ -119,7 +119,7 @@ namespace Mcma.Core
                     .Select(s => s.GetResourceEndpoint<T>())
                     .FirstOrDefault(re => resource.Id.StartsWith(re.Data.HttpEndpoint, StringComparison.OrdinalIgnoreCase));
             if (resourceEndpoint != null)
-                return await resourceEndpoint.PostAsync<T>(resource);
+                return await resourceEndpoint.PutAsync<T>(resource);
 
             var resp = await HttpClient.PutAsJsonAsync(resource.Id, resource);
             return await resp.Content.ReadAsObjectFromJsonAsync<T>();
