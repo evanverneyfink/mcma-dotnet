@@ -10,7 +10,7 @@ namespace Mcma.Aws.Authentication
 {
     public class AwsAuthenticatorProvider : IMcmaAuthenticatorProvider
     {
-        public AwsAuthenticatorProvider(IDictionary<string, string> defaultAuthContexts)
+        public AwsAuthenticatorProvider(IDictionary<string, string> defaultAuthContexts = null)
         {
             DefaultAuthContexts = defaultAuthContexts ?? new Dictionary<string, string>();
         }

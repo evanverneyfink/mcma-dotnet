@@ -30,14 +30,14 @@ namespace Mcma.Core
                 new Service
                 {
                     Name = "Service Registry",
+                    AuthType = Options.ServicesAuthType,
+                    AuthContext = Options.ServicesAuthContext,
                     Resources = new List<ResourceEndpoint>
                     {
                         new ResourceEndpoint
                         {
                             ResourceType = nameof(Service),
-                            HttpEndpoint = Options.ServicesUrl,
-                            AuthType = Options.ServicesAuthType,
-                            AuthContext = Options.ServicesAuthContext
+                            HttpEndpoint = Options.ServicesUrl
                         }
                     }
                 },

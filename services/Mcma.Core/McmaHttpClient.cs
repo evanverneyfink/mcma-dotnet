@@ -21,7 +21,7 @@ namespace Mcma.Core
         private string BaseUrl { get; }
 
         public Task<HttpResponseMessage> GetAsync(string url, IDictionary<string, string> queryParams = null, IDictionary<string, string> headers = null)
-            => SendAsync(url, HttpMethod.Get, headers, null);
+            => SendAsync(WithQueryParams(url, queryParams), HttpMethod.Get, headers, null);
 
         public Task<HttpResponseMessage> PostAsync(string url, HttpContent body, IDictionary<string, string> headers = null)
             => SendAsync(url, HttpMethod.Post, headers, body);
@@ -36,7 +36,9 @@ namespace Mcma.Core
             => SendAsync(url, HttpMethod.Delete, headers, null);
 
         private string WithQueryParams(string url, IDictionary<string, string> queryParams)
-            => (url ?? string.Empty) + "?" + string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+            => queryParams != null && queryParams.Any()
+                ? (url ?? string.Empty) + "?" + string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={kvp.Value}"))
+                : url;
 
         private Task<HttpResponseMessage> SendAsync(string url, HttpMethod method, IDictionary<string, string> headers, HttpContent body)
         {

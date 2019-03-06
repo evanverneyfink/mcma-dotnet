@@ -32,7 +32,7 @@ namespace Mcma.Aws
                     Region = AwsEnvironment.Region
                 };
 
-        public static IMcmaAuthenticatorProvider GetAwsV4AuthProvider()
+        public static IMcmaAuthenticatorProvider GetDefaultAwsV4AuthProvider()
             => new AwsAuthenticatorProvider(
                 new Dictionary<string, string>
                 {
@@ -42,7 +42,7 @@ namespace Mcma.Aws
         public static ResourceManagerOptions GetAwsV4ResourceManagerOptions()
             => new ResourceManagerOptions(ServicesUrl)
                 .WithAuth(
-                    GetAwsV4AuthProvider(),
+                    GetDefaultAwsV4AuthProvider(),
                     ServicesAuthType,
                     ServicesAuthContext
                 );
@@ -53,12 +53,18 @@ namespace Mcma.Aws
         public static ResourceManagerOptions GetAwsV4ResourceManagerOptions(this McmaApiRequest request)
             => new ResourceManagerOptions(request.StageVariables["ServicesUrl"])
                 .WithAuth(
-                    GetAwsV4AuthProvider(),
+                    GetDefaultAwsV4AuthProvider(),
                     request.StageVariables.ContainsKey("ServicesAuthType") ? request.StageVariables["ServicesAuthType"] : null,
                     request.StageVariables.ContainsKey("ServicesAuthContext") ? request.StageVariables["ServicesAuthContext"] : null
                 );
 
         public static ResourceManager GetAwsV4ResourceManager(this McmaApiRequest request)
             => new ResourceManager(request.GetAwsV4ResourceManagerOptions());
+
+        public static ResourceManagerOptions WithAwsV4Auth(this ResourceManagerOptions options, AwsV4AuthContext authContext)
+            => options.WithAuth(
+                new AwsAuthenticatorProvider(new Dictionary<string, string>{[AwsConstants.AWS4] = authContext.ToMcmaJson().ToString()}),
+                AwsConstants.AWS4,
+                authContext.ToMcmaJson().ToString());
     }
 }

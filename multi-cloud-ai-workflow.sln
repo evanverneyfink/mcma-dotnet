@@ -71,7 +71,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "conform", "conform", "{4851
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.ValidateWorkflowInput", "workflows\conform\01-ValidateWorkflowInput\Mcma.Aws.Workflows.Conform.ValidateWorkflowInput.csproj", "{06C60512-DFB9-472A-B75E-C42B468FD027}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.MoveContentToFileRepository", "workflows\conform\02-MoveContentToFileRepository\Mcma.Aws.Workflows.Conform.MoveContentToFileRepository.csproj", "{AE3B2B8E-0A68-4265-B2D8-CA1509278BC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.MoveContentToFileRep", "workflows\conform\02-MoveContentToFileRep\Mcma.Aws.Workflows.Conform.MoveContentToFileRep.csproj", "{AE3B2B8E-0A68-4265-B2D8-CA1509278BC6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.CreateMediaAsset", "workflows\conform\03-CreateMediaAsset\Mcma.Aws.Workflows.Conform.CreateMediaAsset.csproj", "{D850FACB-7932-4589-B67F-0B8C82F3CCD8}"
 EndProject

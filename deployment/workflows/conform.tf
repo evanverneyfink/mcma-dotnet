@@ -8,7 +8,7 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.ValidateWorkflowInput::Mcma.Aws.Workflows.Conform.ValidateWorkflowInput.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/01-ValidateWorkflowInput/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -25,12 +25,12 @@ resource "aws_lambda_function" "conform-01-validate-workflow-input" {
 }
 
 resource "aws_lambda_function" "conform-02-move-content-to-file-repository" {
-  filename         = "./../workflows/conform/02-MoveContentToFileRepository/dist/lambda.zip"
+  filename         = "./../workflows/conform/02-MoveContentToFileRep/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-conform-02-move-content-to-file-repository")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "Mcma.Aws.Workflows.Conform.MoveContentToFileRepository::Mcma.Aws.Workflows.Conform.MoveContentToFileRepository.Function::Handler"
-  source_code_hash = "${base64sha256(file("./../workflows/conform/02-MoveContentToFileRepository/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  handler          = "Mcma.Aws.Workflows.Conform.MoveContentToFileRep::Mcma.Aws.Workflows.Conform.MoveContentToFileRep.Function::Handler"
+  source_code_hash = "${base64sha256(file("./../workflows/conform/02-MoveContentToFileRep/dist/lambda.zip"))}"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -52,7 +52,7 @@ resource "aws_lambda_function" "conform-03-create-media-asset" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.CreateMediaAsset::Mcma.Aws.Workflows.Conform.CreateMediaAsset.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/03-CreateMediaAsset/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -74,7 +74,7 @@ resource "aws_lambda_function" "conform-04-extract-technical-metadata" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata::Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/04-ExtractTechnicalMetadata/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -102,7 +102,7 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata::Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/05-RegisterTechnicalMetadata/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -124,7 +124,7 @@ resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements::Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/06-DecideTranscodeRequirements/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -147,7 +147,7 @@ resource "aws_lambda_function" "conform-07a-short-transcode" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.ShortTranscode::Mcma.Aws.Workflows.Conform.ShortTranscode.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/07a-ShortTranscode/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -175,7 +175,7 @@ resource "aws_lambda_function" "conform-07b-long-transcode" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.LongTranscode::Mcma.Aws.Workflows.Conform.LongTranscode.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/07b-LongTranscode/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -203,7 +203,7 @@ resource "aws_lambda_function" "conform-08-register-proxy-essence" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.RegisterProxyEssence::Mcma.Aws.Workflows.Conform.RegisterProxyEssence.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/08-RegisterProxyEssence/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -225,7 +225,7 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage::Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/09-CopyProxyToWebsiteStorage/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -247,7 +247,7 @@ resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator::Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/10-RegisterProxyWebsiteLocator/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -269,7 +269,7 @@ resource "aws_lambda_function" "conform-11-start-ai-workflow" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.Conform.StartAiWorkflow::Mcma.Aws.Workflows.Conform.StartAiWorkflow.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/conform/11-StartAiWorkflow/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 

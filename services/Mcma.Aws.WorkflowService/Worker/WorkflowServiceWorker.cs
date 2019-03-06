@@ -96,18 +96,18 @@ namespace Mcma.Aws.WorkflowService.Worker
         {
             var jobAssignmentId = @event.JobAssignmentId;
             var notification = @event.Notification;
-            var notificationJobAssignment = notification.Content.ToMcmaObject<JobAssignment>();
+            var notificationJobPayload = notification.Content.ToMcmaObject<JobBase>();
 
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
 
             var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
 
-            jobAssignment.Status = notificationJobAssignment.Status;
-            jobAssignment.StatusMessage = notificationJobAssignment.StatusMessage;
-            if (notificationJobAssignment.Progress != null)
-                jobAssignment.Progress = notificationJobAssignment.Progress;
+            jobAssignment.Status = notificationJobPayload.Status;
+            jobAssignment.StatusMessage = notificationJobPayload.StatusMessage;
+            if (notificationJobPayload.Progress != null)
+                jobAssignment.Progress = notificationJobPayload.Progress;
 
-            jobAssignment.JobOutput = notificationJobAssignment.JobOutput;
+            jobAssignment.JobOutput = notificationJobPayload.JobOutput;
             jobAssignment.DateModified = DateTime.UtcNow;
 
             await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
@@ -125,7 +125,7 @@ namespace Mcma.Aws.WorkflowService.Worker
             if (jobProfile.InputParameters != null)
             {
                 foreach (var parameter in jobProfile.InputParameters) {
-                    if (jobInput.ContainsKey(parameter.ParameterName))
+                    if (!jobInput.ContainsKey(parameter.ParameterName))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
                 }
             }

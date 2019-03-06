@@ -7,16 +7,20 @@ namespace Mcma.Core
 {
     public class ResourceEndpointClient
     {
-        public ResourceEndpointClient(ResourceEndpoint resourceEndpoint, IMcmaAuthenticatorProvider authProvider = null, string authType = null, string authContext = null)
+        internal ResourceEndpointClient(ResourceEndpoint resourceEndpoint,
+                                        IMcmaAuthenticatorProvider authProvider,
+                                        string serviceAuthType,
+                                        string serviceAuthContext)
         {
             Data = resourceEndpoint;
+
+            var authType = !string.IsNullOrWhiteSpace(resourceEndpoint.AuthType) ? resourceEndpoint.AuthType : serviceAuthType;
+            var authContext = !string.IsNullOrWhiteSpace(resourceEndpoint.AuthContext) ? resourceEndpoint.AuthContext : serviceAuthContext;
 
             HttpClientTask =
                 new Lazy<Task<McmaHttpClient>>(async () =>
                     new McmaHttpClient(
-                        authProvider != null
-                            ? await authProvider.GetAuthenticatorAsync(authType ?? resourceEndpoint.AuthType, authContext ?? resourceEndpoint.AuthContext)
-                            : null,
+                        authProvider != null ? await authProvider.GetAuthenticatorAsync(authType, authContext) : null,
                         resourceEndpoint.HttpEndpoint));
         }
 

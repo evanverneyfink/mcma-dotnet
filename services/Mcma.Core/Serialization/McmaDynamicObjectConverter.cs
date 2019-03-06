@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Mcma.Core.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,9 +15,17 @@ namespace Mcma.Core.Serialization
             var jObj = JObject.Load(reader);
 
             var dict = (IDictionary<string, object>)Activator.CreateInstance(GetSerializedType(jObj, objectType));
+            var resource = dict as IMcmaResource;
 
             foreach (var jsonProp in jObj.Properties())
             {
+                // check if this is the ID property of a dynamic resource, which needs to be treated as a special case
+                if (jsonProp.Name.Equals(nameof(IMcmaResource.Id), StringComparison.OrdinalIgnoreCase) && resource != null)
+                {
+                    resource.Id = jsonProp.Value.Value<string>();
+                    continue;
+                }
+
                 if (jsonProp.Value is JObject childJObj && childJObj["@type"] != null)
                 {
                     var childObjType = GetSerializedType(childJObj, null);
@@ -40,12 +49,18 @@ namespace Mcma.Core.Serialization
             writer.WritePropertyName("@type");
             writer.WriteValue(((IMcmaObject)value).Type);
 
+            if (value is IMcmaResource resource)
+            {
+                writer.WritePropertyName("id");
+                writer.WriteValue(resource.Id);
+            }
+
             foreach (var keyValuePair in (IDictionary<string, object>)value)
             {
                 if (keyValuePair.Value == null && serializer.NullValueHandling == NullValueHandling.Ignore)
                     continue;
 
-                writer.WritePropertyName(keyValuePair.Key);
+                writer.WritePropertyName(keyValuePair.Key.PascalCaseToCamelCase());
                 serializer.Serialize(writer, keyValuePair.Value);
             }
 

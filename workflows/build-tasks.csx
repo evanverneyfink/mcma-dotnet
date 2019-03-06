@@ -8,7 +8,7 @@ public static readonly IBuildTask BuildCommonSteps = new AggregateTask(
 
 public static readonly IBuildTask BuildConformWorkflow = new AggregateTask(
     new BuildProject("workflows/conform/01-ValidateWorkflowInput"),
-    new BuildProject("workflows/conform/02-MoveContentToFileRepository"),
+    new BuildProject("workflows/conform/02-MoveContentToFileRep"),
     new BuildProject("workflows/conform/03-CreateMediaAsset"),
     new BuildProject("workflows/conform/04-ExtractTechnicalMetadata"),
     new BuildProject("workflows/conform/05-RegisterTechnicalMetadata"),
@@ -34,7 +34,7 @@ public static readonly IBuildTask BuildCommonStepsSln = new AggregateTask(
 
 public static readonly IBuildTask BuildConformWorkflowSln = new AggregateTask(
     new BuildProject("workflows/conform/01-ValidateWorkflowInput", false, false),
-    new BuildProject("workflows/conform/02-MoveContentToFileRepository", false, false),
+    new BuildProject("workflows/conform/02-MoveContentToFileRep", false, false),
     new BuildProject("workflows/conform/03-CreateMediaAsset", false, false),
     new BuildProject("workflows/conform/04-ExtractTechnicalMetadata", false, false),
     new BuildProject("workflows/conform/05-RegisterTechnicalMetadata", false, false),

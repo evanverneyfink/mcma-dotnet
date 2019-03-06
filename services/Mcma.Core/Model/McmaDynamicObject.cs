@@ -16,19 +16,30 @@ namespace Mcma.Core
 
         public string Type { get; set; }
 
-        public T Get<T>(string key) => PropertyDictionary.ContainsKey(key) ? (T)PropertyDictionary[key] : default(T);
-        
-        public bool TryGet<T>(string key, out T value)
+        public T Get<T>(string key, bool caseSensitive = true)
         {
+            var dict = GetPropertyDictionary(caseSensitive);
+            return dict.ContainsKey(key) ? (T)dict[key] : default(T);
+        }
+        
+        public bool TryGet<T>(string key, out T value) => TryGet<T>(key, true, out value);
+        
+        public bool TryGet<T>(string key, bool caseSensitive, out T value)
+        {
+            var dict = GetPropertyDictionary(caseSensitive);
+
             value = default(T);
-            if (PropertyDictionary.ContainsKey(key))
+            if (dict.ContainsKey(key))
             {
-                value = (T)PropertyDictionary[key];
+                value = (T)dict[key];
                 return true;
             }
-            Logger.Debug($"Failed to find key '{key}' in dynamic object of type {GetType().Name}. Existing keys are {string.Join(", ", PropertyDictionary.Keys)}.");
+            Logger.Debug($"Failed to find key '{key}' in dynamic object of type {GetType().Name}. Existing keys are {string.Join(", ", dict.Keys)}.");
             return false;
         }
+
+        private IDictionary<string, object> GetPropertyDictionary(bool caseSensitive)
+            => caseSensitive ? PropertyDictionary : new Dictionary<string, object>(PropertyDictionary, StringComparer.OrdinalIgnoreCase);
 
         #region Dictionary & Dynamic Implementations
 

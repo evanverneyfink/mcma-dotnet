@@ -7,9 +7,9 @@ namespace Mcma.Core.Logging
         private void WriteToConsole(string message, object[] args)
         {
             if (args != null && args.Length > 0)
-                Console.Write(message, args);
+                Console.WriteLine(message, args);
             else
-                Console.Write(message);
+                Console.WriteLine(message);
         }
 
         public void Debug(string message, params object[] args) => WriteToConsole(message, args);

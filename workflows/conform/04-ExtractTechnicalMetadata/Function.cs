@@ -21,12 +21,11 @@ namespace Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata
 {
     public class Function
     {
-        private static readonly string SERVICE_REGISTRY_URL = Environment.GetEnvironmentVariable(nameof(SERVICE_REGISTRY_URL));
         private static readonly string TEMP_BUCKET = Environment.GetEnvironmentVariable(nameof(TEMP_BUCKET));
         private static readonly string ACTIVITY_CALLBACK_URL = Environment.GetEnvironmentVariable(nameof(ACTIVITY_CALLBACK_URL));
         private static readonly string ACTIVITY_ARN = Environment.GetEnvironmentVariable(nameof(ACTIVITY_ARN));
 
-        public async Task Handler(JToken @event, ILambdaContext context)
+        public async Task<string> Handler(JToken @event, ILambdaContext context)
         {
             var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
@@ -45,6 +44,7 @@ namespace Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata
             }
 
             var stepFunction = new AmazonStepFunctionsClient();
+            Logger.Debug($"Getting Activity Task with ARN {ACTIVITY_ARN}...");
             var data = await stepFunction.GetActivityTaskAsync(new GetActivityTaskRequest
             {
                 ActivityArn = ACTIVITY_ARN
@@ -53,8 +53,12 @@ namespace Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata
             var taskToken = data.TaskToken;
             if (taskToken == null)
                 throw new Exception("Failed to obtain activity task");
+            
+            Logger.Debug($"Activity Task token is {taskToken}");
 
             @event = JToken.Parse(data.Input);
+            
+            Logger.Debug($"Getting job profile 'ExtractTechnicalMetadata'...");
 
             var jobProfiles = await resourceManager.GetAsync<JobProfile>(("name", "ExtractTechnicalMetadata"));
 
@@ -80,8 +84,14 @@ namespace Mcma.Aws.Workflows.Conform.ExtractTechnicalMetadata
                     HttpEndpoint = ACTIVITY_CALLBACK_URL + "?taskToken=" + Uri.EscapeDataString(taskToken)
                 }
             };
+            
+            Logger.Debug($"Submitting AME job...");
 
             ameJob = await resourceManager.CreateAsync(ameJob);
+            
+            Logger.Debug($"Successfully created AME job {ameJob.Id}.");
+
+            return ameJob.Id;
         }
     }
 }

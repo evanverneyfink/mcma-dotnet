@@ -6,9 +6,9 @@ resource "aws_lambda_function" "media-repository-api-handler" {
   filename         = "./../services/Mcma.Aws.MediaRepository/ApiHandler/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-media-repository-api-handler")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "Mcma.Aws.MediaRepository.ApiHander::Mcma.Aws.MediaRepository.ApiHandler.Function::Handler"
+  handler          = "Mcma.Aws.MediaRepository.ApiHandler::Mcma.Aws.MediaRepository.ApiHandler.Function::Handler"
   source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.MediaRepository/ApiHandler/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 }

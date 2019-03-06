@@ -97,8 +97,15 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 
             Logger.Debug("[BMContent]: " + bmc.ToMcmaJson());
 
-            var bme = CreateBmEssence(bmc, @event["data"]["repositoryFile"].ToMcmaObject<S3Locator>(), mediaInfo);
+            Logger.Debug("[@event]:" + @event.ToMcmaJson().ToString());
+            Logger.Debug("[mediaInfo]:" + mediaInfo.ToMcmaJson().ToString());
 
+            var bme = CreateBmEssence(bmc, @event["data"]["repositoryFile"].ToMcmaObject<S3Locator>(), mediaInfo);
+            
+            Logger.Debug("Serializing essence...");
+            Logger.Debug("[bme]:" + bme.ToMcmaJson().ToString());
+
+            Logger.Debug("Creating essence...");
             bme = await resourceManager.CreateAsync(bme);
             if (bme.Id == null)
                 throw new Exception("Failed to register BMEssence");

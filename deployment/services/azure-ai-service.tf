@@ -8,7 +8,7 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.AzureAiService.ApiHandler::Mcma.Aws.AzureAiService.ApiHandler.Function::Handler"
   source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.AzureAiService/ApiHandler/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 }
@@ -23,7 +23,7 @@ resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.AzureAiService.ApiHandler::Mcma.Aws.AzureAiService.ApiHandlerNonSecure.Function::Handler"
   source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.AzureAiService/ApiHandlerNonSecure/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 }
@@ -38,7 +38,7 @@ resource "aws_lambda_function" "azure-ai-service-worker" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.AzureAiService.Worker::Mcma.Aws.AzureAiService.Worker.Function::Handler"
   source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.AzureAiService/Worker/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "300"
   memory_size      = "3008"
 }

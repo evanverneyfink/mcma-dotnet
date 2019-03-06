@@ -35,7 +35,7 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
             Logger.Debug(nameof(ProcessNotificationAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
 
-            dynamic notification = request.JsonBody;
+            var notification = request.JsonBody.ToMcmaObject<Notification>();
 
             if (notification == null)
             {
@@ -44,39 +44,38 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
                 return;
             }
 
-            if (notification.content == null)
+            if (notification.Content == null)
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 response.StatusMessage = "Missing notification content";
                 return;
             }
 
-            if (notification.content.status == null)
-            {
-                response.StatusCode = (int)HttpStatusCode.BadRequest;
-                response.StatusMessage = "Missing notification content status";
-                return;
-            }
+            var job = notification.Content.ToMcmaObject<Job>();
+
+            var taskToken = request.QueryStringParameters["taskToken"];
 
             var stepFunctionClient = new AmazonStepFunctionsClient();
-            switch (notification.content.status)
+            switch (job.Status)
             {
                 case "COMPLETED":
+                    Logger.Debug($"Sending task success for task token {taskToken}");
                     await stepFunctionClient.SendTaskSuccessAsync(new SendTaskSuccessRequest
                     {
-                        TaskToken = request.QueryStringParameters["taskToken"],
-                        Output = notification.source.ToMcmaJson()
+                        TaskToken = taskToken,
+                        Output = $"\"{notification.Source}\""
                     });
                     break;
                 case "FAILED":
-                    var error = notification.content["@type"] + " failed execution";
-                    var cause = notification.content["@type"] + " with id '" + notification.source + "' failed execution with statusMessage '" + notification.content.statusMessage + "'";
+                    Logger.Debug($"Sending task failure for task token {taskToken}");
+                    var error = job.Type + " failed execution";
+                    var cause = job.Type + " with id '" + job.Id + "' failed execution with statusMessage '" + job.StatusMessage + "'";
 
                     await stepFunctionClient.SendTaskFailureAsync(new SendTaskFailureRequest
                     {
-                        TaskToken = request.QueryStringParameters["taskToken"],
+                        TaskToken = taskToken,
                         Error = error,
-                        Cause = cause.ToMcmaJson().ToString()
+                        Cause = cause
                     });
                     break;
             }

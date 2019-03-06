@@ -85,7 +85,7 @@ resource "aws_lambda_function" "process-workflow-completion" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.ProcessWorkflowCompletion::Mcma.Aws.Workflows.ProcessWorkflowCompletion.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/ProcessWorkflowCompletion/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -104,7 +104,7 @@ resource "aws_lambda_function" "process-workflow-failure" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.ProcessWorkflowFailure::Mcma.Aws.Workflows.ProcessWorkflowFailure.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/ProcessWorkflowFailure/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 
@@ -127,7 +127,7 @@ resource "aws_lambda_function" "workflow-activity-callback-handler" {
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
   handler          = "Mcma.Aws.Workflows.WorkflowActivityCallbackHandler::Mcma.Aws.Workflows.WorkflowActivityCallbackHandler.Function::Handler"
   source_code_hash = "${base64sha256(file("./../workflows/WorkflowActivityCallbackHandler/dist/lambda.zip"))}"
-  runtime          = "nodejs8.10"
+  runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
 }

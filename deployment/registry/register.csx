@@ -8,6 +8,7 @@
 #r "nuget:AWSSDK.S3, 3.3.29"
 
 #r "../../services/Mcma.Core/dist/staging/Mcma.Core.dll"
+#r "../../services/Mcma.Aws/dist/staging/Mcma.Aws.dll"
 
 using Amazon;
 using Amazon.Runtime;
@@ -19,6 +20,8 @@ using Amazon.S3.Model;
 using Newtonsoft.Json.Linq;
 
 using Mcma.Core;
+using Mcma.Aws;
+using Mcma.Aws.Authentication;
 
 public class UpdateServiceRegistry : BuildTask
 {
@@ -308,10 +311,20 @@ public class UpdateServiceRegistry : BuildTask
             {
                 new ResourceEndpoint {ResourceType = nameof(Service), HttpEndpoint = servicesUrl},
                 new ResourceEndpoint {ResourceType = nameof(JobProfile), HttpEndpoint = jobProfilesUrl}
-            }
+            },
+            AuthType = "AWS4"
         };
 
-        var resourceManager = new ResourceManager(new ResourceManagerOptions(servicesUrl));
+        var resourceManager = new ResourceManager(
+            new ResourceManagerOptions(servicesUrl).WithAwsV4Auth(
+                new AwsV4AuthContext
+                (
+                    AwsCredentialsJson["accessKeyId"].Value<string>(),
+                    AwsCredentialsJson["secretAccessKey"].Value<string>(),
+                    AwsCredentialsJson["region"].Value<string>()
+                )
+            )
+        );
         
         Console.WriteLine("Getting existing services...");
         var retrievedServices = await resourceManager.GetAsync<Service>();

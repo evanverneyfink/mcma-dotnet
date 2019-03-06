@@ -73,7 +73,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
 
             var serviceId = request.StageVariables["PublicUrl"] + request.Path;
 
-            response.JsonBody = (await table.GetAsync<Service>(serviceId)).ToMcmaJson();
+            response.JsonBody = (await table.GetAsync<Service>(serviceId))?.ToMcmaJson();
 
             if (response.JsonBody == null)
             {

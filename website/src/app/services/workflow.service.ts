@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, BehaviorSubject, from, timer, of } from 'rxjs';
-import { map, zip, switchMap, concatMap, tap, takeWhile } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, from, timer } from 'rxjs';
+import { map, zip, switchMap, takeWhile } from 'rxjs/operators';
 
-import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator, AuthenticatedHttp } from 'mcma-core';
+import { ResourceManager, WorkflowJob, JobParameterBag, DescriptiveMetadata, Locator } from 'mcma-core';
 
 import { ConfigService } from './config.service';
 import { McmaClientService } from './mcma-client.service';
@@ -101,16 +101,19 @@ export class WorkflowService {
         metadata: DescriptiveMetadata): Promise<WorkflowJob> {
         const jobProfileId = await this.getJobProfileIdAsync(resourceManager, profileName);
 
+        const inputFile = new Locator({
+            awsS3Bucket: uploadBucket,
+            awsS3Key: objectKey
+        });
+
+        inputFile['@type'] = 'S3Locator';
+
         // creating workflow job
         let workflowJob = new WorkflowJob({
             jobProfile: jobProfileId,
             jobInput: new JobParameterBag({
                 metadata: metadata,
-                inputFile: new Locator({
-                    '@type': 'S3Locator',
-                    awsS3Bucket: uploadBucket,
-                    awsS3Key: objectKey
-                })
+                inputFile
             })
         });
 

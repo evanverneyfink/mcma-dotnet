@@ -13,11 +13,11 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Aws.WorkflowService.ApiHandler
 {
-    public class Functions
+    public class Function
     {
         private static ApiGatewayApiController Controller = new ApiGatewayApiController();
 
-        static Functions()
+        static Function()
         {
             Controller.AddRoute("GET", "/job-assignments", JobAssignmentRoutes.GetJobAssignmentsAsync);
             Controller.AddRoute("POST", "/job-assignments", JobAssignmentRoutes.AddJobAssignmentAsync);
