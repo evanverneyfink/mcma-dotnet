@@ -64,11 +64,11 @@ namespace Mcma.Aws.AwsAiService.Worker
                 ValidateJobProfile(jobProfile, jobInput);
 
                 S3Locator inputFile;
-                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
+                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
                     throw new Exception("Invalid or missing input file.");
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 switch (jobProfile.Name)
@@ -130,8 +130,8 @@ namespace Mcma.Aws.AwsAiService.Worker
 
                         var translateParameters = new TranslateTextRequest
                         {
-                            SourceLanguageCode = jobInput.TryGet("sourceLanguageCode", out string srcLanguageCode) ? srcLanguageCode : "auto",
-                            TargetLanguageCode = jobInput.Get<string>("targetLanguageCode"),
+                            SourceLanguageCode = jobInput.TryGet("sourceLanguageCode", false, out string srcLanguageCode) ? srcLanguageCode : "auto",
+                            TargetLanguageCode = jobInput.Get<string>("targetLanguageCode", false),
                             Text = inputText
                         };
 
@@ -220,7 +220,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 var jobInput = job.JobInput;
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var copySource = Uri.EscapeDataString(@event.OutputFile.AwsS3Bucket + "/" + @event.OutputFile.AwsS3Key);
@@ -297,7 +297,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 var jobInput = job.JobInput;
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var s3Bucket = outputLocation.AwsS3Bucket;
@@ -386,7 +386,7 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
         }
 
-        private static void ValidateJobProfile(JobProfile jobProfile, IDictionary<string, object> jobInput)
+        private static void ValidateJobProfile(JobProfile jobProfile, JobParameterBag jobInput)
         {
             if (jobProfile.Name != JOB_PROFILE_TRANSCRIBE_AUDIO &&
                 jobProfile.Name != JOB_PROFILE_TRANSLATE_TEXT &&
@@ -395,7 +395,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.ContainsKey(parameter.ParameterName))
+                    if (!jobInput.HasProperty(parameter.ParameterName, false))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

@@ -19,20 +19,7 @@ namespace Mcma.Core.Serialization
             var obj = Activator.CreateInstance(GetSerializedType(jObj, objectType));
 
             foreach (var jsonProp in jObj.Properties())
-            {
-                var clrProp = objectType.GetProperties().FirstOrDefault(p => p.CanWrite && p.Name.Equals(jsonProp.Name, StringComparison.OrdinalIgnoreCase));
-                if (clrProp != null)
-                {
-                    try
-                    {
-                        clrProp.SetValue(obj, jsonProp.Value.Type != JTokenType.Null ? jsonProp.Value.ToObject(clrProp.PropertyType, serializer) : null);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error($"Failed to write property {clrProp.Name} on type {objectType.Name} with value {jsonProp.Value.ToString()}: {ex}");
-                    }
-                }
-            }
+                TryReadClrProperty(objectType, obj, serializer, jsonProp);
 
             return obj;
         }
@@ -41,18 +28,9 @@ namespace Mcma.Core.Serialization
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("@type");
-            writer.WriteValue(((IMcmaObject)value).Type);
+            WriteTypeProperty(writer, value);
 
-            foreach (var property in value.GetType().GetProperties().Where(p => p.Name != nameof(IMcmaObject.Type) && p.CanRead))
-            {
-                var propValue = property.GetValue(value);
-                if (propValue == null && serializer.NullValueHandling == NullValueHandling.Ignore)
-                    continue;
-                
-                writer.WritePropertyName(char.ToLower(property.Name[0]) + property.Name.Substring(1));
-                serializer.Serialize(writer, propValue);
-            }
+            WriteClrProperties(writer, value, serializer);
 
             writer.WriteEndObject();
         }

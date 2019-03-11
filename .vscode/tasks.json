@@ -49,6 +49,33 @@
                 "showReuseMessage": true,
                 "clear": false
             }
+        },
+        {
+            "label": "deploy (no build)",
+            "command": ".\\build.bat",
+            "type": "shell",
+            "group": "build",
+            "args": [
+                "deployNoBuild"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
+            "label": "build tests",
+            "command": "dotnet build tests/Mcma.Tests",
+            "type": "shell",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
         }
     ]
 }

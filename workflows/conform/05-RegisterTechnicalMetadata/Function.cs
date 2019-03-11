@@ -20,20 +20,10 @@ using Newtonsoft.Json.Linq;
 namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 {
     public class Function
-    {
-        private McmaHttpClient McmaHttp { get; } = new McmaHttpClient();
-
-        private static readonly string SERVICE_REGISTRY_URL = Environment.GetEnvironmentVariable(nameof(SERVICE_REGISTRY_URL));
-        
+    {   
         private string GetAmeJobId(JToken @event)
         {
             return @event["data"]["ameJobId"].FirstOrDefault()?.ToString();
-        }
-
-        private async Task<BMContent> GetBmContentAsync(string url)
-        {
-            var response = await McmaHttp.GetAsync(url);
-            return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<BMContent>();
         }
 
         private BMEssence CreateBmEssence(BMContent bmContent, S3Locator location, JToken mediaInfo)
@@ -69,8 +59,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
                 throw new Exception("Failed to obtain AmeJob ID");
             Logger.Debug("[AmeJobID]: " + ameJobId);
 
-            var response = await McmaHttp.GetAsync(ameJobId);
-            var ameJob = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<AmeJob>();
+            var ameJob = await resourceManager.ResolveAsync<AmeJob>(ameJobId);
 
             if (!ameJob.JobOutput.TryGet<S3Locator>("outputFile", out var outputFile))
                 throw new Exception("Unable to get outputFile from AmeJob output.");
@@ -93,7 +82,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
             }
             var mediaInfo = JToken.Parse(await new StreamReader(s3Object.ResponseStream).ReadToEndAsync());
 
-            var bmc = await GetBmContentAsync(@event["data"]["bmContent"].ToString());
+            var bmc = await resourceManager.ResolveAsync<BMContent>(@event["data"]["bmContent"].ToString());
 
             Logger.Debug("[BMContent]: " + bmc.ToMcmaJson());
 

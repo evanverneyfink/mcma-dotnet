@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
+using System.Reflection;
 using Mcma.Core.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,48 +15,32 @@ namespace Mcma.Core.Serialization
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var jObj = JObject.Load(reader);
-
-            var dict = (IDictionary<string, object>)Activator.CreateInstance(GetSerializedType(jObj, objectType));
-            var resource = dict as IMcmaResource;
-
-            foreach (var jsonProp in jObj.Properties())
+            try
             {
-                // check if this is the ID property of a dynamic resource, which needs to be treated as a special case
-                if (jsonProp.Name.Equals(nameof(IMcmaResource.Id), StringComparison.OrdinalIgnoreCase) && resource != null)
-                {
-                    resource.Id = jsonProp.Value.Value<string>();
-                    continue;
-                }
+                var jObj = JObject.Load(reader);
 
-                if (jsonProp.Value is JObject childJObj && childJObj["@type"] != null)
-                {
-                    var childObjType = GetSerializedType(childJObj, null);
-                    if (childObjType != null)
-                    {
-                        dict[jsonProp.Name] = jsonProp.Value.ToObject(childObjType, serializer);
-                        continue;
-                    }
-                }
-                
-                dict[jsonProp.Name] = jsonProp.Value;
+                var serializedType = GetSerializedType(jObj, objectType);
+                var dynamicObj = (IDictionary<string, object>)Activator.CreateInstance(serializedType);
+
+                foreach (var jsonProp in jObj.Properties().Where(p => !p.Name.Equals(TypeJsonPropertyName, StringComparison.OrdinalIgnoreCase)))
+                    if (!TryReadClrProperty(objectType, dynamicObj, serializer, jsonProp))
+                        dynamicObj[jsonProp.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(jsonProp.Value, serializer);
+
+                return dynamicObj;
             }
-
-            return dict;
+            catch (Exception ex)
+            {
+                throw new Exception($"An error occurred reading JSON for an object of type {objectType.Name}. See inner exception for details.", ex);
+            }
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             writer.WriteStartObject();
 
-            writer.WritePropertyName("@type");
-            writer.WriteValue(((IMcmaObject)value).Type);
+            WriteTypeProperty(writer, value);
 
-            if (value is IMcmaResource resource)
-            {
-                writer.WritePropertyName("id");
-                writer.WriteValue(resource.Id);
-            }
+            WriteClrProperties(writer, value, serializer);
 
             foreach (var keyValuePair in (IDictionary<string, object>)value)
             {

@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        },
+        {
             "name": "Register script debug",
             "type": "coreclr",
             "request": "launch",
@@ -18,6 +24,17 @@
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": true
+        },
+        {
+            "name": "Debug Tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build tests",
+            "program": "${workspaceFolder}/tests/Mcma.Tests/bin/Debug/netcoreapp2.1/Mcma.Tests.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/tests/Mcma.Tests",
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
     ]
 }

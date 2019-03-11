@@ -15,7 +15,8 @@ namespace Mcma.Core.Serialization
             Converters =
             {
                 new McmaObjectConverter(),
-                new McmaDynamicObjectConverter()
+                new McmaDynamicObjectConverter(),
+                new ExpandoObjectConverter()
             }
         };
 

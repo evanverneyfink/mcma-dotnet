@@ -55,5 +55,17 @@ namespace Mcma.Core
 
         public static async Task<HttpResponseMessage> PatchAsJsonAsync(this McmaHttpClient client, string url, object body)
             => await client.PatchAsync(url, new StringContent(body.ToMcmaJson().ToString(), Encoding.UTF8, "application/json"));
+
+        public static async Task<T> GetAndReadAsObjectFromJsonAsync<T>(this McmaHttpClient client,
+            string url,
+            IDictionary<string, string> queryParams = null,
+            IDictionary<string, string> headers = null)
+            => await (await client.GetAsync(url, queryParams, headers)).EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<T>();
+
+        public static async Task<T[]> GetAndReadAsArrayFromJsonAsync<T>(this McmaHttpClient client,
+            string url,
+            IDictionary<string, string> queryParams = null,
+            IDictionary<string, string> headers = null)
+            => await (await client.GetAsync(url, queryParams, headers)).EnsureSuccessStatusCode().Content.ReadAsArrayFromJsonAsync<T>();
     }
 }

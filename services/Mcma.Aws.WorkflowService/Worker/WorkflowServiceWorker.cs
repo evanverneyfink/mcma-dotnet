@@ -117,7 +117,7 @@ namespace Mcma.Aws.WorkflowService.Worker
             await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
         }
 
-        private static void ValidateJobProfile(JobProfile jobProfile, IDictionary<string, object> jobInput)
+        private static void ValidateJobProfile(JobProfile jobProfile, JobParameterBag jobInput)
         {
             if (jobProfile.Name != JOB_PROFILE_CONFORM_WORKFLOW && jobProfile.Name != JOB_PROFILE_AI_WORKFLOW)
                 throw new Exception("JobProfile '" + jobProfile.Name + "' is not supported");
@@ -125,7 +125,7 @@ namespace Mcma.Aws.WorkflowService.Worker
             if (jobProfile.InputParameters != null)
             {
                 foreach (var parameter in jobProfile.InputParameters) {
-                    if (!jobInput.ContainsKey(parameter.ParameterName))
+                    if (!jobInput.HasProperty(parameter.ParameterName, false))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
                 }
             }

@@ -58,7 +58,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 ValidateJobProfile(jobProfile, jobInput);
 
                 S3Locator inputFile;
-                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
+                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
                     throw new Exception("Invalid or missing input file.");
 
                 string mediaFileUrl;
@@ -202,7 +202,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 var jobInput = workflowJob.JobInput;
                 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var jobOutputBucket = outputLocation.AwsS3Bucket;
@@ -248,7 +248,7 @@ namespace Mcma.Aws.AzureAiService.Worker
             }
         }
 
-        private static void ValidateJobProfile(JobProfile jobProfile, IDictionary<string, object> jobInput)
+        private static void ValidateJobProfile(JobProfile jobProfile, JobParameterBag jobInput)
         {
             if (jobProfile.Name != JOB_PROFILE_TRANSCRIBE_AUDIO &&
                 jobProfile.Name != JOB_PROFILE_TRANSLATE_TEXT &&
@@ -257,7 +257,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.ContainsKey(parameter.ParameterName))
+                    if (!jobInput.HasProperty(parameter.ParameterName, false))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

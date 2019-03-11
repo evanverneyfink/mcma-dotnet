@@ -52,11 +52,11 @@ namespace Mcma.Aws.AmeService.Worker
                 ValidateJobProfile(jobProfile, jobInput);
 
                 S3Locator inputFile;
-                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
+                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
                     throw new Exception("Invalid or missing input file.");
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 MediaInfoProcess mediaInfoProcess;
@@ -127,14 +127,14 @@ namespace Mcma.Aws.AmeService.Worker
             }
         }
 
-        private static void ValidateJobProfile(JobProfile jobProfile, IDictionary<string, object> jobInput)
+        private static void ValidateJobProfile(JobProfile jobProfile, JobParameterBag jobInput)
         {
             if (jobProfile.Name != JOB_PROFILE_EXTRACT_TECHNICAL_METADATA)
                 throw new Exception("JobProfile '" + jobProfile.Name + "' is not supported");
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.ContainsKey(parameter.ParameterName))
+                    if (!jobInput.HasProperty(parameter.ParameterName, false))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

@@ -149,6 +149,15 @@ namespace Mcma.Core
                 .FirstOrDefault(re => re.Data.HttpEndpoint.StartsWith(url, StringComparison.OrdinalIgnoreCase));
         }
 
+        public async Task<T> ResolveAsync<T>(string url)
+        {
+            var resourceEndpoint = await GetResourceEndpointAsync(url);
+
+            return resourceEndpoint != null
+                ? await resourceEndpoint.GetAsync<T>(url)
+                : await HttpClient.GetAndReadAsObjectFromJsonAsync<T>(url);
+        }
+
         public async Task SendNotificationAsync<T>(T resource, NotificationEndpoint notificationEndpoint) where T : IMcmaResource
         {
             if (!string.IsNullOrWhiteSpace(notificationEndpoint?.HttpEndpoint))

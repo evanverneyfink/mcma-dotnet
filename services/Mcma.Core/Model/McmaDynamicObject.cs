@@ -14,7 +14,19 @@ namespace Mcma.Core
             Type = GetType().Name;
         }
 
+        private ExpandoObject ExpandoObject { get; } = new ExpandoObject();
+
+        private IDictionary<string, object> PropertyDictionary => ExpandoObject;
+
         public string Type { get; set; }
+        
+        public object this[string key] { get => PropertyDictionary[key]; set => PropertyDictionary[key] = value; }
+
+        public bool HasProperty(string key, bool caseSensitive = true)
+        {
+            var dict = GetPropertyDictionary(caseSensitive);
+            return dict.ContainsKey(key);
+        }
 
         public T Get<T>(string key, bool caseSensitive = true)
         {
@@ -43,43 +55,37 @@ namespace Mcma.Core
 
         #region Dictionary & Dynamic Implementations
 
-        private ExpandoObject ExpandoObject { get; } = new ExpandoObject();
+        ICollection<string> IDictionary<string, object>.Keys => PropertyDictionary.Keys;
 
-        private IDictionary<string, object> PropertyDictionary => ExpandoObject;
+        ICollection<object> IDictionary<string, object>.Values => PropertyDictionary.Values;
 
-        public object this[string key] { get => PropertyDictionary[key]; set => PropertyDictionary[key] = value; }
+        int ICollection<KeyValuePair<string, object>>.Count => PropertyDictionary.Count;
 
-        public ICollection<string> Keys => PropertyDictionary.Keys;
+        bool ICollection<KeyValuePair<string, object>>.IsReadOnly => PropertyDictionary.IsReadOnly;
 
-        public ICollection<object> Values => PropertyDictionary.Values;
+        void IDictionary<string, object>.Add(string key, object value) => PropertyDictionary.Add(key, value);
 
-        public int Count => PropertyDictionary.Count;
-
-        public bool IsReadOnly => PropertyDictionary.IsReadOnly;
-
-        public void Add(string key, object value) => PropertyDictionary.Add(key, value);
-
-        public void Add(KeyValuePair<string, object> item) => PropertyDictionary.Add(item);
+        void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item) => PropertyDictionary.Add(item);
         
-        public void Clear() => PropertyDictionary.Clear();
+        void ICollection<KeyValuePair<string, object>>.Clear() => PropertyDictionary.Clear();
 
-        public bool Contains(KeyValuePair<string, object> item) => PropertyDictionary.Contains(item);
+        bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item) => PropertyDictionary.Contains(item);
 
-        public bool ContainsKey(string key) => PropertyDictionary.ContainsKey(key);
+        bool IDictionary<string, object>.ContainsKey(string key) => PropertyDictionary.ContainsKey(key);
 
-        public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) => PropertyDictionary.CopyTo(array, arrayIndex);
+        void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) => PropertyDictionary.CopyTo(array, arrayIndex);
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator() => PropertyDictionary.GetEnumerator();
+        IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator() => PropertyDictionary.GetEnumerator();
 
-        public bool Remove(string key) => PropertyDictionary.Remove(key);
+        bool IDictionary<string, object>.Remove(string key) => PropertyDictionary.Remove(key);
 
-        public bool Remove(KeyValuePair<string, object> item) => PropertyDictionary.Remove(item);
+        bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item) => PropertyDictionary.Remove(item);
 
-        public bool TryGetValue(string key, out object value) => PropertyDictionary.TryGetValue(key, out value);
+        bool IDictionary<string, object>.TryGetValue(string key, out object value) => PropertyDictionary.TryGetValue(key, out value);
 
         IEnumerator IEnumerable.GetEnumerator() => PropertyDictionary.GetEnumerator();
 
-        public DynamicMetaObject GetMetaObject(Expression parameter) => ((IDynamicMetaObjectProvider)ExpandoObject).GetMetaObject(parameter);
+        DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => ((IDynamicMetaObjectProvider)ExpandoObject).GetMetaObject(parameter);
 
         #endregion
     }
