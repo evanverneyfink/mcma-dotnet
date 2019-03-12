@@ -119,11 +119,11 @@ resource "aws_lambda_function" "conform-05-register-technical-metadata" {
 }
 
 resource "aws_lambda_function" "conform-06-decide-transcode-requirements" {
-  filename         = "./../workflows/conform/06-DecideTranscodeRequirements/dist/lambda.zip"
+  filename         = "./../workflows/conform/06-DecideTranscodeReqs/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-conform-06-decide-transcode-requirements")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements::Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements.Function::Handler"
-  source_code_hash = "${base64sha256(file("./../workflows/conform/06-DecideTranscodeRequirements/dist/lambda.zip"))}"
+  handler          = "Mcma.Aws.Workflows.Conform.DecideTranscodeReqs::Mcma.Aws.Workflows.Conform.DecideTranscodeReqs.Function::Handler"
+  source_code_hash = "${base64sha256(file("./../workflows/conform/06-DecideTranscodeReqs/dist/lambda.zip"))}"
   runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"
@@ -242,11 +242,11 @@ resource "aws_lambda_function" "conform-09-copy-proxy-to-website-storage" {
 }
 
 resource "aws_lambda_function" "conform-10-register-proxy-website-locator" {
-  filename         = "./../workflows/conform/10-RegisterProxyWebsiteLocator/dist/lambda.zip"
+  filename         = "./../workflows/conform/10-RegisterProxyWebsiteLoc/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-conform-10-register-proxy-website-locator")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator::Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator.Function::Handler"
-  source_code_hash = "${base64sha256(file("./../workflows/conform/10-RegisterProxyWebsiteLocator/dist/lambda.zip"))}"
+  handler          = "Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLoc::Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLoc.Function::Handler"
+  source_code_hash = "${base64sha256(file("./../workflows/conform/10-RegisterProxyWebsiteLoc/dist/lambda.zip"))}"
   runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"

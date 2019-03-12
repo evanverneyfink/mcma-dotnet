@@ -112,7 +112,7 @@ namespace Mcma.Core.Serialization
                 case JTokenType.Undefined:
                     return null;
                 case JTokenType.Array:
-                    return token.Select(x => ConvertJsonToClr(token, serializer)).ToArray();
+                    return token.Select(x => ConvertJsonToClr(x, serializer)).ToArray();
                 case JTokenType.Object:
                     var jObj = (JObject)token;
                     return IsMcmaObject(jObj) ? CreateMcmaObject(jObj, serializer) : CreateExpando(jObj, serializer);

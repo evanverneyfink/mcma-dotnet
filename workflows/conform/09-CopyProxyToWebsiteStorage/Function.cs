@@ -22,20 +22,11 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
 {
     public class Function
     {
-        private static readonly string SERVICE_REGISTRY_URL = Environment.GetEnvironmentVariable(nameof(SERVICE_REGISTRY_URL));
         private static readonly string WEBSITE_BUCKET = Environment.GetEnvironmentVariable(nameof(WEBSITE_BUCKET));
         
-        private McmaHttpClient McmaHttp { get; } = new McmaHttpClient();
-
         private string GetTransformJobId(JToken @event)
         {
-            return @event["data"]["transformJobId"].FirstOrDefault()?.ToString();
-        }
-
-        private async Task<BMEssence> GetBmEssenceAsync(string url)
-        {
-            var response = await McmaHttp.GetAsync(url);
-            return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<BMEssence>();
+            return @event["data"]["transformJobId"]?.FirstOrDefault()?.ToString();
         }
 
         public async Task<S3Locator> Handler(JToken @event, ILambdaContext context)
@@ -61,14 +52,13 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
             S3Locator outputFile;
             if (transformJobId == null)
             {
-                var bme = await GetBmEssenceAsync(@event["data"]["bmEssence"]?.ToString());
+                var bme = await resourceManager.ResolveAsync<BMEssence>(@event["data"]["bmEssence"]?.ToString());
 
                 outputFile = (S3Locator)bme.Locations[0];
             }
             else
             {
-                var response = await McmaHttp.GetAsync(transformJobId);
-                var transformJob = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<TransformJob>();
+                var transformJob = await resourceManager.ResolveAsync<TransformJob>(transformJobId);
 
                 outputFile = transformJob.JobOutput.Get<S3Locator>(nameof(outputFile), false);
             }

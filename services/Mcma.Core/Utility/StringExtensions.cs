@@ -355,5 +355,18 @@ namespace Mcma.Core.Utility
         }
 
         #endregion
+        
+
+        public static string HexEncode(this byte[] key) => BitConverter.ToString(key).ToLowerInvariant().Replace("-", "");
+
+        public static byte[] HexDecode(this string hexString) => hexString.SplitIntoChunks(2).Select(x => Convert.ToByte(x, 16)).ToArray();
+
+        public static string HexDecodeString(this string hexString) => Encoding.UTF8.GetString(hexString.HexDecode());
+
+        public static IEnumerable<string> SplitIntoChunks(this string source, int chunkSize)
+        {
+            for (var i = 0; i < source.Length; i += chunkSize)
+                yield return (i + chunkSize >= source.Length) ? source.Substring(i, chunkSize) : source.Substring(i);
+        }
     }
 }

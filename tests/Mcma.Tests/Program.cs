@@ -9,7 +9,8 @@ namespace Mcma.Tests
         static void Main(string[] args)
         {
             McmaTypes.Add<S3Locator>();
-            SerializationTests.ToMcmaObject_ShouldDeserializeWorkflowJob();
+            
+            SerializationTests.RunAll();
         }
     }
 }

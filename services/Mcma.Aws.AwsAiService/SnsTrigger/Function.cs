@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda;
 using Amazon.Lambda.Core;
@@ -7,9 +8,9 @@ using Amazon.Lambda.Serialization;
 using Amazon.Lambda.SNSEvents;
 using Newtonsoft.Json.Linq;
 using Mcma.Aws;
-using Mcma.Core.Serialization;
-using System.Text;
 using Mcma.Core.Logging;
+using Mcma.Core.Serialization;
+using Mcma.Core.Utility;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
@@ -36,18 +37,18 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
                     if (record.Sns.Message == null)
                         throw new Exception("The payload doesn't contain expectd data: Sns.Message");
 
-                    dynamic message = JToken.Parse(record.Sns.Message);
+                    var message = JToken.Parse(record.Sns.Message);
                     Logger.Debug($"SNS Message ==> {message}");
 
-                    var rekoJobId = message.JobId;
-                    var rekoJobType = message.API;
-                    var status = message.Status;
+                    var rekoJobId = message["JobId"]?.Value<string>();
+                    var rekoJobType = message["API"]?.Value<string>();
+                    var status = message["Status"]?.Value<string>();
 
-                    var jt = message.JobTag.ToString();
+                    var jt = message["JobTag"]?.Value<string>();
                     if (jt == null)
                         throw new Exception($"The jobAssignment couldn't be found in the SNS message");
 
-                    var jobAssignmentId = Encoding.UTF8.GetString(BitConverter.GetBytes(jt));
+                    var jobAssignmentId = jt.HexDecodeString();
 
                     Logger.Debug($"rekoJobId: {rekoJobId}");
                     Logger.Debug($"rekoJobType: {rekoJobType}");

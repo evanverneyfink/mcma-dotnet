@@ -61,7 +61,8 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 
             var ameJob = await resourceManager.ResolveAsync<AmeJob>(ameJobId);
 
-            if (!ameJob.JobOutput.TryGet<S3Locator>("outputFile", out var outputFile))
+            S3Locator outputFile;
+            if (!ameJob.JobOutput.TryGet<S3Locator>(nameof(outputFile), false, out outputFile))
                 throw new Exception("Unable to get outputFile from AmeJob output.");
 
             var s3Bucket = outputFile.AwsS3Bucket;
@@ -104,7 +105,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
 
             bmc = await resourceManager.UpdateAsync<BMContent>(bmc);
 
-            return string.Empty;
+            return bme.Id;
         }
     }
 }

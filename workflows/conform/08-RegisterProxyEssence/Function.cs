@@ -21,35 +21,15 @@ namespace Mcma.Aws.Workflows.Conform.RegisterProxyEssence
 {
     public class Function
     {
-        private static readonly string SERVICE_REGISTRY_URL = Environment.GetEnvironmentVariable(nameof(SERVICE_REGISTRY_URL));
-        
-        private McmaHttpClient McmaHttp { get; } = new McmaHttpClient();
-
         private string GetTransformJobId(JToken @event)
-        {
-            return @event["data"]["transformJobId"].FirstOrDefault()?.ToString();
-        }
-
-        private async Task<BMContent> GetBmContentAsync(string url)
-        {
-            var response = await McmaHttp.GetAsync(url);
-            return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<BMContent>();
-        }
-
-        private async Task<BMEssence> GetBmEssenceAsync(string url)
-        {
-            var response = await McmaHttp.GetAsync(url);
-            return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<BMEssence>();
-        }
+            => @event["data"]["transformJobId"]?.FirstOrDefault()?.Value<string>();
 
         private BMEssence CreateBmEssence(BMContent bmContent, S3Locator location)
-        {
-            return new BMEssence
+            => new BMEssence
             {
                 BMContent = bmContent.Id,
                 Locations = new Locator[] {location}
             };
-        }
 
         public async Task<JToken> Handler(JToken @event, ILambdaContext context)
         {
@@ -69,21 +49,24 @@ namespace Mcma.Aws.Workflows.Conform.RegisterProxyEssence
                 Logger.Error("Failed to send notification: {0}", error);
             }
             
+            // get transform job id
             var transformJobId = GetTransformJobId(@event);
 
+            // in case we did not do a transcode, just return the existing essence ID
             if (transformJobId == null)
-                return @event["data"]["bmEssence"];
+                return @event["data"]["bmEssence"].Value<string>();
 
-            var response = await McmaHttp.GetAsync(transformJobId);
-            var transformJob = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<TransformJob>();
+            // 
+            var transformJob = await resourceManager.ResolveAsync<TransformJob>(transformJobId);
 
-            if (!transformJob.JobOutput.TryGet<S3Locator>("outputFile", out var outputFile))
+            S3Locator outputFile;
+            if (!transformJob.JobOutput.TryGet<S3Locator>(nameof(outputFile), false, out outputFile))
                 throw new Exception("Unable to get outputFile from AmeJob output.");
 
             var s3Bucket = outputFile.AwsS3Bucket;
             var s3Key = outputFile.AwsS3Key;
 
-            var bmc = await GetBmContentAsync(@event["data"]["bmContent"]?.ToString());
+            var bmc = await resourceManager.ResolveAsync<BMContent>(@event["data"]["bmContent"]?.ToString());
 
             var locator = new S3Locator
             {

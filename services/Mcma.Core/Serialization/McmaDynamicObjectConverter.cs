@@ -23,7 +23,7 @@ namespace Mcma.Core.Serialization
                 var dynamicObj = (IDictionary<string, object>)Activator.CreateInstance(serializedType);
 
                 foreach (var jsonProp in jObj.Properties().Where(p => !p.Name.Equals(TypeJsonPropertyName, StringComparison.OrdinalIgnoreCase)))
-                    if (!TryReadClrProperty(objectType, dynamicObj, serializer, jsonProp))
+                    if (!TryReadClrProperty(serializedType, dynamicObj, serializer, jsonProp))
                         dynamicObj[jsonProp.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(jsonProp.Value, serializer);
 
                 return dynamicObj;

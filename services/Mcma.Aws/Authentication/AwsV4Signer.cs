@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Mcma.Core.Utility;
 
 namespace Mcma.Aws.Authentication
 {

@@ -79,7 +79,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata", "workflows\conform\05-RegisterTechnicalMetadata\Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata.csproj", "{A1030A8F-D985-4F30-915C-59115A0380DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements", "workflows\conform\06-DecideTranscodeRequirements\Mcma.Aws.Workflows.Conform.DecideTranscodeRequirements.csproj", "{AB03904D-A236-456F-98CD-357EC82D5484}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.DecideTranscodeReqs", "workflows\conform\06-DecideTranscodeReqs\Mcma.Aws.Workflows.Conform.DecideTranscodeReqs.csproj", "{AB03904D-A236-456F-98CD-357EC82D5484}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.ShortTranscode", "workflows\conform\07a-ShortTranscode\Mcma.Aws.Workflows.Conform.ShortTranscode.csproj", "{6C25F81F-2B66-48BB-895C-10EFE0B7BC31}"
 EndProject
@@ -89,7 +89,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage", "workflows\conform\09-CopyProxyToWebsiteStorage\Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage.csproj", "{EC750E5A-2480-40EE-B241-09CBAA0E1F12}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator", "workflows\conform\10-RegisterProxyWebsiteLocator\Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLocator.csproj", "{84BDA228-0A32-4440-AB24-BA7DE0F7D0F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLoc", "workflows\conform\10-RegisterProxyWebsiteLoc\Mcma.Aws.Workflows.Conform.RegisterProxyWebsiteLoc.csproj", "{84BDA228-0A32-4440-AB24-BA7DE0F7D0F3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.Conform.StartAiWorkflow", "workflows\conform\11-StartAiWorkflow\Mcma.Aws.Workflows.Conform.StartAiWorkflow.csproj", "{2FF9FCB3-C924-4C2C-BEC9-CC2B6E4FDBFE}"
 EndProject

@@ -16,10 +16,12 @@ namespace Mcma.Core.Serialization
         {
             var jObj = JObject.Load(reader);
 
-            var obj = Activator.CreateInstance(GetSerializedType(jObj, objectType));
+            var serializedType = GetSerializedType(jObj, objectType);
+
+            var obj = Activator.CreateInstance(serializedType);
 
             foreach (var jsonProp in jObj.Properties())
-                TryReadClrProperty(objectType, obj, serializer, jsonProp);
+                TryReadClrProperty(serializedType, obj, serializer, jsonProp);
 
             return obj;
         }

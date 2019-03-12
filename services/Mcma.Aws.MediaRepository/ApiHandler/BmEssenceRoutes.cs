@@ -34,7 +34,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             Logger.Debug(nameof(AddBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
 
-            dynamic bmEssence = request.JsonBody?.ToMcmaObject<BMEssence>();
+            var bmEssence = request.JsonBody?.ToMcmaObject<BMEssence>();
             if (bmEssence == null)
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -44,9 +44,9 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
             var bmEssenceId = request.StageVariables["PublicUrl"] + "/bm-essences/" + Guid.NewGuid();
             bmEssence.Id = bmEssenceId;
-            bmEssence.Status = "NEW";
-            bmEssence.DateCreated = DateTime.UtcNow;
-            bmEssence.DateModified = bmEssence.DateCreated;
+            bmEssence["Status"] = "NEW";
+            bmEssence["DateCreated"] = DateTime.UtcNow;
+            bmEssence["DateModified"] = bmEssence["DateCreated"];
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -83,7 +83,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             Logger.Debug(nameof(PutBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
 
-            dynamic bmEssence = request.JsonBody?.ToMcmaObject<BMEssence>();
+            var bmEssence = request.JsonBody?.ToMcmaObject<BMEssence>();
             if (bmEssence == null)
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -95,9 +95,9 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
             var bmEssenceId = request.StageVariables["PublicUrl"] + request.Path;
             bmEssence.Id = bmEssenceId;
-            bmEssence.DateModified = DateTime.UtcNow;
-            if (!bmEssence.DateCreated.HasValue)
-                bmEssence.DateCreated = bmEssence.DateModified;
+            bmEssence["DateModified"] = DateTime.UtcNow;
+            if (!bmEssence.TryGet("DateCreated", out object dateCreated) || dateCreated == null)
+                bmEssence["DateCreated"] = bmEssence["DateModified"];
 
             await table.PutAsync<BMEssence>(bmEssenceId, bmEssence);
 

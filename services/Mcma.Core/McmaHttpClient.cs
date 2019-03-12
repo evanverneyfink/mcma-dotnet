@@ -55,7 +55,7 @@ namespace Mcma.Core
             }
 
             if (string.IsNullOrWhiteSpace(url))
-                throw new Exception("HttpClient: MissingFieldException url in request");
+                throw new Exception("HttpClient: Missing url in request");
 
             var request = new HttpRequestMessage(method, url);
             

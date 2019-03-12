@@ -1,12 +1,22 @@
 using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json.Linq;
 using Mcma.Core;
 using Mcma.Core.Serialization;
+using Mcma.Aws;
 
 namespace Mcma.Tests
 {
     public static class SerializationTests
     {
+        public static void RunAll()
+        {
+            foreach (var method in typeof(SerializationTests).GetMethods(BindingFlags.Static | BindingFlags.Public).Where(m => m.Name != nameof(RunAll)))
+                method.Invoke(null, new object[0]);
+        }
+
         public static void ToMcmaObject_ShouldDeserializeWorkflowJob()
         {
             var workflowJobJson =
@@ -32,6 +42,18 @@ namespace Mcma.Tests
             var serialized = workflowJob.ToMcmaJson();
             
             Console.WriteLine(serialized);
+        }
+    
+        public static void ToMcmaObject_ShouldDeserializeBmEssence()
+        {
+            var bmEssenceJObj = JObject.Parse(File.ReadAllText("json/BmEssence.json"));
+
+            var bmEssence = bmEssenceJObj.ToMcmaObject<BMEssence>();
+
+            Console.WriteLine(bmEssence.Id);
+            Console.WriteLine(bmEssence.Locations[0].Type);
+            Console.WriteLine(((S3Locator)bmEssence.Locations[0]).AwsS3Key);
+            Console.WriteLine(((S3Locator)bmEssence.Locations[0]).AwsS3Bucket);
         }
     }
 }
