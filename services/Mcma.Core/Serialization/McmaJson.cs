@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Mcma.Core.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -16,7 +18,7 @@ namespace Mcma.Core.Serialization
             {
                 new McmaObjectConverter(),
                 new McmaDynamicObjectConverter(),
-                new ExpandoObjectConverter()
+                new McmaExpandoObjectConverter()
             }
         };
 
@@ -28,5 +30,12 @@ namespace Mcma.Core.Serialization
         public static T ToMcmaObject<T>(this JToken json) => json.ToObject<T>(Serializer);
 
         public static JToken ToMcmaJson<T>(this T obj) => JToken.FromObject(obj, Serializer);
+
+        public static async Task<JToken> ReadJsonFromStreamAsync(this Stream stream)
+        {
+            using (var textReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(textReader))
+                return await JToken.LoadAsync(jsonReader);
+        }
     }
 }

@@ -58,7 +58,7 @@ namespace Mcma.Aws.Workflows.Conform.StartAiWorkflow
                 }
             };
 
-            //workflowJob = await resourceManager.CreateAsync(workflowJob);
+            workflowJob = await resourceManager.CreateAsync(workflowJob);
 
             return JToken.FromObject(new
             {

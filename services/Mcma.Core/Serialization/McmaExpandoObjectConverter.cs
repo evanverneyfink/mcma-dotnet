@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -8,15 +8,15 @@ using Newtonsoft.Json.Linq;
 
 namespace Mcma.Core.Serialization
 {
-    public class ExpandoObjectConverter : McmaJsonConverter
+    public class McmaExpandoObjectConverter : McmaJsonConverter
     {
-        public override bool CanConvert(Type objectType) => objectType == typeof(ExpandoObject);
+        public override bool CanConvert(Type objectType) => objectType == typeof(McmaExpandoObject);
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var jObj = JObject.Load(reader);
 
-            IDictionary<string, object> expando = new ExpandoObject();
+            IDictionary<string, object> expando = new McmaExpandoObject();
 
             foreach (var jsonProp in jObj.Properties().Where(p => !p.Name.Equals(TypeJsonPropertyName, StringComparison.OrdinalIgnoreCase)))
                 expando[jsonProp.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(jsonProp.Value, serializer);

@@ -58,7 +58,7 @@ module "services" {
   website_bucket    = "${var.website_bucket}"
 
   conform_workflow_id = "${module.workflows.conform_workflow_id}"
-  #ai_workflow_id      = "${module.workflows.ai_workflow_id}"
+  ai_workflow_id      = "${module.workflows.ai_workflow_id}"
 
   ec2_transform_service_hostname = "${module.ec2.elb.hostname}"
 

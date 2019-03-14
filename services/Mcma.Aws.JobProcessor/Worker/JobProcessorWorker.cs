@@ -21,98 +21,51 @@ namespace Mcma.Aws.JobProcessor.Worker
 
         internal static async Task CreateJobAssignmentAsync(JobProcessorWorkerRequest @event)
         {
-            Logger.Debug("Creating job assignment for job process " + @event.JobProcessId);
-
-            var mcmaHttp = new McmaHttpClient();
             var resourceManager = @event.Request.GetAwsV4ResourceManager();
 
             var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
 
             var jobProcessId = @event.JobProcessId;
-
-            Logger.Debug("Getting job process " + @event.JobProcessId);
             var jobProcess = await table.GetAsync<JobProcess>(jobProcessId);
 
             try
             {
-                var jobId = jobProcess.Job;
+                // retrieving the job
+                var job = await resourceManager.ResolveAsync<Job>(jobProcess.Job);
+
+                // retrieving the jobProfile
+                var jobProfile = await resourceManager.ResolveAsync<JobProfile>(job.JobProfile);
                 
-                Logger.Debug("Job ID for job process " + @event.JobProcessId + " is " + jobId);
-
-                if (string.IsNullOrEmpty(jobId))
-                    throw new Exception("JobProcess is missing a job definition.");
-
-                Job job;
-                try
-                {
-                    Logger.Debug("Getting job " + jobId);
-                    var jobResponse = await mcmaHttp.GetAsync(jobId);
-                    Logger.Debug("Parsing job " + jobId + " from response");
-                    job = await jobResponse.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<Job>();
-                }
-                catch
-                {
-                    throw new Exception("Failed to retrieve job definition from url '" +  jobId + "'");
-                }
-
-                var jobProfileId = job.JobProfile;
-                
-                Logger.Debug("Job profile ID for job " + jobId + " is " + jobProfileId);
-
-                if (string.IsNullOrEmpty(jobProfileId))
-                    throw new Exception("Job is missing jobProfile");
-
-                JobProfile jobProfile;
-                try
-                {
-                    Logger.Debug("Getting job profile " + jobProfileId);
-                    var jobProfileResponse = await mcmaHttp.GetAsync(jobProfileId);
-                    Logger.Debug("Parsing job profile " + jobProfileId + " from repsonse");
-                    jobProfile = await jobProfileResponse.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<JobProfile>();
-                }
-                catch
-                {
-                    throw new Exception("Failed to retrieve job profile from url '" + jobProfileId + "'");
-                }
-
-                Logger.Debug("Validating job input for job " + jobId);
-                var jobInput = job.JobInput;
+                // validating job.JobInput with required input parameters of jobProfile
+                var jobInput = job.JobInput; //await resourceManager.ResolveAsync<JobParameterBag>(job.JobInput);
                 if (jobInput == null)
                     throw new Exception("Job is missing jobInput");
 
                 if (jobProfile.InputParameters != null)
                 {
                     foreach (var parameter in jobProfile.InputParameters)
-                    {
                         if (!jobInput.HasProperty(parameter.ParameterName, false))
                             throw new Exception("jobInput is missing required input parameter '" + parameter.ParameterName + "'");
-                    }
                 }
 
-                Logger.Debug("Loading services for job assignment");
+                // finding a service that is capable of handling the job type and job profile
                 var services = await resourceManager.GetAsync<Service>();
 
                 Service selectedService = null;
-                ResourceEndpoint jobAssignmentResource = null;
+                ResourceEndpointClient jobAssignmentResourceEndpoint = null;
                 
                 foreach (var service in services)
                 {
-                    jobAssignmentResource = null;
+                    var serviceClient = new ServiceClient(service, AwsEnvironment.GetDefaultAwsV4AuthProvider());
+
+                    jobAssignmentResourceEndpoint = null;
 
                     if (service.JobType == job.Type)
                     {
-                        Logger.Debug("Matched service " + service.Name + " on job type");
-                        if (service.Resources != null)
-                        {
-                            foreach (var serviceResource in service.Resources)
-                                if (serviceResource.ResourceType == nameof(JobAssignment))
-                                    jobAssignmentResource = serviceResource;
-                        }
+                        jobAssignmentResourceEndpoint = serviceClient.GetResourceEndpoint<JobAssignment>();
                         
-                        if (jobAssignmentResource == null)
+                        if (jobAssignmentResourceEndpoint == null)
                             continue;
-                        
-                        Logger.Debug("Matched service resource " + jobAssignmentResource.HttpEndpoint + ". Checking for matching job profile");
 
                         if (service.JobProfiles != null)
                         {
@@ -120,8 +73,8 @@ namespace Mcma.Aws.JobProcessor.Worker
                             {
                                 if (serviceJobProfile == job.JobProfile)
                                 {
-                                    Logger.Debug("Matched job profile");
                                     selectedService = service;
+                                    break;
                                 }
                             }
                         }
@@ -131,14 +84,19 @@ namespace Mcma.Aws.JobProcessor.Worker
                         break;
                 }
 
-                if (jobAssignmentResource == null)
+                if (jobAssignmentResourceEndpoint == null)
                     throw new Exception("Failed to find service that could execute the " + job.GetType().Name);
 
-                var jobAssignment = new JobAssignment {Job = jobProcess.Job, NotificationEndpoint = new NotificationEndpoint{HttpEndpoint = jobProcessId + "/notifications"}};
+                var jobAssignment = new JobAssignment
+                {
+                    Job = jobProcess.Job,
+                    NotificationEndpoint = new NotificationEndpoint
+                    {
+                        HttpEndpoint = jobProcessId + "/notifications"
+                    }
+                };
                 
-                Logger.Debug("Submitting job assignment to " + jobAssignmentResource.HttpEndpoint);
-                var response = await mcmaHttp.PostAsJsonAsync(jobAssignmentResource.HttpEndpoint, jobAssignment);
-                jobAssignment = await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<JobAssignment>();
+                jobAssignment = await jobAssignmentResourceEndpoint.PostAsync<JobAssignment>(jobAssignment);
 
                 jobProcess.Status = "SCHEDULED";
                 jobProcess.JobAssignment = jobAssignment.Id;
@@ -151,10 +109,8 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             jobProcess.DateModified = DateTime.UtcNow;
 
-            Logger.Debug("Updating job process on completion");
             await table.PutAsync<JobProcess>(jobProcessId, jobProcess);
 
-            Logger.Debug("Sending job process notification on completion");
             await resourceManager.SendNotificationAsync(jobProcess, jobProcess.NotificationEndpoint);
         }
 
@@ -164,9 +120,8 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             try
             {
-                var mcmaHttp = new McmaHttpClient();
-
-                await mcmaHttp.DeleteAsync(jobAssignmentId);
+                var resourceManager = @event.Request.GetAwsV4ResourceManager();
+                await resourceManager.DeleteAsync<JobAssignment>(jobAssignmentId);
             }
             catch (Exception error)
             {

@@ -21,9 +21,22 @@ public static readonly IBuildTask BuildConformWorkflow = new AggregateTask(
     new BuildProject("workflows/conform/11-StartAiWorkflow")
 );
 
+public static readonly IBuildTask BuildAiWorkflow = new AggregateTask(
+    new BuildProject("workflows/ai/01-ValidateWorkflowInput"),
+    new BuildProject("workflows/ai/02-ExtractSpeechToText"),
+    new BuildProject("workflows/ai/03-RegisterSpeechToTextOutput"),
+    new BuildProject("workflows/ai/04-TranslateSpeechTranscription"),
+    new BuildProject("workflows/ai/05-RegisterSpeechTranslation"),
+    new BuildProject("workflows/ai/06-DetectCelebritiesAws"),
+    new BuildProject("workflows/ai/07-RegisterCelebritiesInfoAws"),
+    new BuildProject("workflows/ai/08-DetectCelebritiesAzure"),
+    new BuildProject("workflows/ai/09-RegisterCelebritiesInfoAzure")
+);
+
 public static readonly IBuildTask BuildWorkflows = new AggregateTask(
     BuildCommonSteps,
-    BuildConformWorkflow
+    BuildConformWorkflow,
+    BuildAiWorkflow
 );
 
 public static readonly IBuildTask BuildCommonStepsSln = new AggregateTask(
@@ -47,7 +60,20 @@ public static readonly IBuildTask BuildConformWorkflowSln = new AggregateTask(
     new BuildProject("workflows/conform/11-StartAiWorkflow", false, false)
 );
 
+public static readonly IBuildTask BuildAiWorkflowSln = new AggregateTask(
+    new BuildProject("workflows/ai/01-ValidateWorkflowInput", false, false),
+    new BuildProject("workflows/ai/02-ExtractSpeechToText", false, false),
+    new BuildProject("workflows/ai/03-RegisterSpeechToTextOutput", false, false),
+    new BuildProject("workflows/ai/04-TranslateSpeechTranscription", false, false),
+    new BuildProject("workflows/ai/05-RegisterSpeechTranslation", false, false),
+    new BuildProject("workflows/ai/06-DetectCelebritiesAws", false, false),
+    new BuildProject("workflows/ai/07-RegisterCelebritiesInfoAws", false, false),
+    new BuildProject("workflows/ai/08-DetectCelebritiesAzure", false, false),
+    new BuildProject("workflows/ai/09-RegisterCelebritiesInfoAzure", false, false)
+);
+
 public static readonly IBuildTask BuildWorkflowsSln = new AggregateTask(
     BuildCommonStepsSln,
-    BuildConformWorkflowSln
+    BuildConformWorkflowSln,
+    BuildAiWorkflowSln
 );

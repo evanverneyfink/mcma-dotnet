@@ -115,15 +115,15 @@ namespace Mcma.Core.Serialization
                     return token.Select(x => ConvertJsonToClr(x, serializer)).ToArray();
                 case JTokenType.Object:
                     var jObj = (JObject)token;
-                    return IsMcmaObject(jObj) ? CreateMcmaObject(jObj, serializer) : CreateExpando(jObj, serializer);
+                    return IsMcmaObject(jObj) ? CreateMcmaObject(jObj, serializer) : CreateDynamicObject(jObj, serializer);
                 default:
                     return token;
             }
         }
 
-        protected object CreateExpando(JObject jObj, JsonSerializer serializer)
+        protected object CreateDynamicObject(JObject jObj, JsonSerializer serializer)
         {
-            IDictionary<string, object> expando = new ExpandoObject();
+            IDictionary<string, object> expando = new McmaExpandoObject();
 
             foreach (var property in jObj.Properties())
                 expando[property.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(property.Value, serializer);

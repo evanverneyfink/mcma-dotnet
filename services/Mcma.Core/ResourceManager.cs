@@ -140,6 +140,21 @@ namespace Mcma.Core
                 await HttpClient.DeleteAsync(resource.Id);
         }
 
+        public async Task DeleteAsync<T>(string resourceId)
+        {
+            if (!Services.Any())
+                await InitAsync();
+
+            var resourceEndpoint =
+                Services.Where(s => s.HasResourceEndpoint(typeof(T).Name))
+                    .Select(s => s.GetResourceEndpoint(typeof(T).Name))
+                    .FirstOrDefault(re => resourceId.StartsWith(re.Data.HttpEndpoint, StringComparison.OrdinalIgnoreCase));
+            if (resourceEndpoint != null)
+                await resourceEndpoint.DeleteAsync(resourceId);
+            else
+                await HttpClient.DeleteAsync(resourceId);
+        }
+
         public async Task<ResourceEndpointClient> GetResourceEndpointAsync(string url)
         {
             if (!Services.Any())

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Mcma.Core
 {
     public class JobBase : McmaResource
@@ -7,6 +9,8 @@ namespace Mcma.Core
         public string StatusMessage { get; set; }
 
         public double? Progress { get; set; }
+
+        public IDictionary<string, double?> ParallelProgress { get; set;}
 
         public NotificationEndpoint NotificationEndpoint { get; set; }
 

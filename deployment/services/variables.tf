@@ -4,7 +4,7 @@ variable "temp_bucket" {}
 variable "repository_bucket" {}
 variable "website_bucket" {}
 variable "conform_workflow_id" {}
-#variable "ai_workflow_id" {}
+variable "ai_workflow_id" {}
 
 variable "ec2_transform_service_hostname" {
   default = "localhost"
