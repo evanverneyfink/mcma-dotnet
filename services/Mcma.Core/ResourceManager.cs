@@ -160,8 +160,11 @@ namespace Mcma.Core
             if (!Services.Any())
                 await InitAsync();
 
+            if (string.IsNullOrWhiteSpace(url))
+                return null;
+
             return Services.SelectMany(s => s.Resources)
-                .FirstOrDefault(re => re.Data.HttpEndpoint.StartsWith(url, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(re => url.StartsWith(re.Data.HttpEndpoint, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task<T> ResolveAsync<T>(string url)
@@ -175,17 +178,23 @@ namespace Mcma.Core
 
         public async Task SendNotificationAsync<T>(T resource, NotificationEndpoint notificationEndpoint) where T : IMcmaResource
         {
-            if (!string.IsNullOrWhiteSpace(notificationEndpoint?.HttpEndpoint))
-            {
-                var notification = new Notification {Source = resource.Id, Content = resource.ToMcmaJson()};
+            if (string.IsNullOrWhiteSpace(notificationEndpoint?.HttpEndpoint))
+                return;
 
-                var resourceEndpoint = await GetResourceEndpointAsync(notificationEndpoint.HttpEndpoint);
+            // create a notification from the provided resource
+            var notification = new Notification {Source = resource.Id, Content = resource.ToMcmaJson()};
 
-                if (resourceEndpoint != null)
-                    await resourceEndpoint.PostAsync(notification, notificationEndpoint.HttpEndpoint);
-                else
-                    (await HttpClient.PostAsJsonAsync(notificationEndpoint.HttpEndpoint, notification)).EnsureSuccessStatusCode();
-            }
+            // get the resource endpoint for the notification url
+            var resourceEndpoint = await GetResourceEndpointAsync(notificationEndpoint.HttpEndpoint);
+
+            // send the notification via the ResourceEndpointClient, if found, or just via regular http otherwise
+            var response =
+                resourceEndpoint != null
+                    ? await resourceEndpoint.PostAsync((object)notification, notificationEndpoint.HttpEndpoint)
+                    : await HttpClient.PostAsJsonAsync(notificationEndpoint.HttpEndpoint, notification);
+
+            // ensure that the notification was sent successfully
+            await response.ThrowIfFailedAsync();
         }
     }
 }

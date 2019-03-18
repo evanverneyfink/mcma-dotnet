@@ -10,12 +10,13 @@ using Mcma.Core.Serialization;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.JobRepository.ApiHandler
 {
     public static class JobRoutes
     {
-        public static async Task GetJobsAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetJobsAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetJobsAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -27,7 +28,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddJobAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddJobAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddJobAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -69,7 +70,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             await lambdaClient.InvokeAsync(invokeRequest);
         }
         
-        public static async Task GetJobAsync(McmaApiRequest request, McmaApiResponse response) 
+        public static async Task GetJobAsync(ApiGatewayRequest request, McmaApiResponse response) 
         {
             Logger.Debug(nameof(GetJobAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -88,7 +89,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             }
         }
         
-        public static async Task DeleteJobAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteJobAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteJobAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -122,7 +123,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             }
         }
         
-        public static async Task StopJobAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task StopJobAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -140,7 +141,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             response.StatusMessage = "Stopping job is not implemented";
         }
         
-        public static async Task CancelJobAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task CancelJobAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -158,7 +159,7 @@ namespace Mcma.Aws.JobRepository.ApiHandler
             response.StatusMessage = "Canceling job is not implemented";
         }
 
-        public static async Task ProcessNotificationAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task ProcessNotificationAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

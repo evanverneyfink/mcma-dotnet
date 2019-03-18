@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Mcma.Core.Logging;
 
 namespace Mcma.Core
 {
@@ -34,14 +35,14 @@ namespace Mcma.Core
         private async Task<T> ExecuteObjectAsync<T>(Func<McmaHttpClient, Task<HttpResponseMessage>> execute)
         {
             var response = await ExecuteAsync(execute);
-            response.EnsureSuccessStatusCode();
+            await response.ThrowIfFailedAsync();
             return await response.Content.ReadAsObjectFromJsonAsync<T>();
         }
 
         private async Task<T[]> ExecuteCollectionAsync<T>(Func<McmaHttpClient, Task<HttpResponseMessage>> execute, bool throwIfAnyFailToDeserialize)
         {
             var response = await ExecuteAsync(execute);
-            response.EnsureSuccessStatusCode();
+            await response.ThrowIfFailedAsync();
             return await response.Content.ReadAsArrayFromJsonAsync<T>(throwIfAnyFailToDeserialize);
         }
 

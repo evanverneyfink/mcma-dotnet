@@ -24,8 +24,7 @@ namespace Mcma.Core.Serialization
 
         public static JsonSerializer Serializer { get; private set; } = JsonSerializer.CreateDefault(DefaultSettings);
 
-        public static void SetJsonSerializerSettings(JsonSerializerSettings settings)
-            => Serializer = JsonSerializer.CreateDefault(settings);
+        public static void SetJsonSerializerSettings(JsonSerializerSettings settings) => Serializer = JsonSerializer.CreateDefault(settings);
 
         public static T ToMcmaObject<T>(this JToken json) => json.ToObject<T>(Serializer);
 

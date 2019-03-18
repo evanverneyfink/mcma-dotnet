@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Mcma.Core.Logging;
 
 namespace Mcma.Aws.Authentication
 {
@@ -16,6 +17,10 @@ namespace Mcma.Aws.Authentication
                 !string.IsNullOrWhiteSpace(request.RequestUri.Query)
                     ? string.Join("&",
                         request.RequestUri.Query
+                            // skip the ? at the start of the query string
+                            // I don't think there's ever going to be a case where the query string does NOT start with ?, but
+                            // this will handle it in the case that it doesn't for some reason
+                            .Substring(request.RequestUri.Query[0] == '?' ? 1 : 0)
                             // break into parts on ampersands
                             .Split('&')
                             // break parts into keys and values

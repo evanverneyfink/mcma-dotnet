@@ -6,15 +6,13 @@ using Mcma.Api;
 
 namespace Mcma.Aws.AwsAiService.Worker
 {
-    public class AwsAiServiceWorkerRequest
+    public class AwsAiServiceWorkerRequest : IStageVariableProvider
     {
         public string Action { get; set; }
 
         public string JobAssignmentId { get; set; }
 
         public Notification Notification { get; set; }
-
-        public McmaApiRequest Request { get; set; }
 
         public IDictionary<string, string> StageVariables { get; set; }
 

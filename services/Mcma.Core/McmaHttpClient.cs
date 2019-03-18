@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Mcma.Core.Logging;
 using Mcma.Core.Utility;
 
 namespace Mcma.Core

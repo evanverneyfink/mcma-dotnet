@@ -38,6 +38,8 @@ namespace Mcma.Aws.Authentication
             public static string PrefixedHeader(string name) => $"{Prefix}{name}";
 
             public static readonly string Date = PrefixedHeader(nameof(Date));
+            
+            public static readonly string SecurityToken = PrefixedHeader("Security-Token");
         }
 
         public static class Signing

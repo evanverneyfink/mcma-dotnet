@@ -17,7 +17,7 @@ namespace Mcma.Aws
 
         public static string AccessKey => Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
 
-        public static string SecretKey => Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY ");
+        public static string SecretKey => Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");//Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY ");
 
         public static string SessionToken => Environment.GetEnvironmentVariable("AWS_SESSION_TOKEN");
 
@@ -50,16 +50,20 @@ namespace Mcma.Aws
         public static ResourceManager GetAwsV4ResourceManager()
             => new ResourceManager(GetAwsV4ResourceManagerOptions());
 
-        public static ResourceManagerOptions GetAwsV4ResourceManagerOptions(this McmaApiRequest request)
-            => new ResourceManagerOptions(request.StageVariables["ServicesUrl"])
+        public static ResourceManagerOptions GetAwsV4ResourceManagerOptions(this IStageVariableProvider stageVariableProvider)
+            => new ResourceManagerOptions(stageVariableProvider.StageVariables["ServicesUrl"])
                 .WithAuth(
                     GetDefaultAwsV4AuthProvider(),
-                    request.StageVariables.ContainsKey("ServicesAuthType") ? request.StageVariables["ServicesAuthType"] : null,
-                    request.StageVariables.ContainsKey("ServicesAuthContext") ? request.StageVariables["ServicesAuthContext"] : null
+                    stageVariableProvider.StageVariables.ContainsKey("ServicesAuthType")
+                        ? stageVariableProvider.StageVariables["ServicesAuthType"]
+                        : ServicesAuthType,
+                    stageVariableProvider.StageVariables.ContainsKey("ServicesAuthContext")
+                        ? stageVariableProvider.StageVariables["ServicesAuthContext"]
+                        : ServicesAuthContext
                 );
 
-        public static ResourceManager GetAwsV4ResourceManager(this McmaApiRequest request)
-            => new ResourceManager(request.GetAwsV4ResourceManagerOptions());
+        public static ResourceManager GetAwsV4ResourceManager(this IStageVariableProvider stageVariableProvider)
+            => new ResourceManager(stageVariableProvider.GetAwsV4ResourceManagerOptions());
 
         public static ResourceManagerOptions WithAwsV4Auth(this ResourceManagerOptions options, AwsV4AuthContext authContext)
             => options.WithAuth(

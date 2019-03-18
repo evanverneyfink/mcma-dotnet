@@ -14,6 +14,9 @@ namespace Mcma.Aws.Authentication
         private AwsV4AuthContext AuthContext { get; }
 
         public HttpClient CreateAuthenticatedClient()
-            => new HttpClient(new AwsSigningHttpClientHandler(new AwsV4Signer(AuthContext.AccessKey, AuthContext.SecretKey, AuthContext.Region)));
+            =>
+            new HttpClient(
+                new AwsSigningHttpClientHandler(
+                    new AwsV4Signer(AuthContext.AccessKey, AuthContext.SecretKey, AuthContext.Region, AuthContext.SessionToken)));
     }
 }

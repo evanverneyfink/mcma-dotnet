@@ -6,6 +6,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Mcma.Aws.JobRepository.Worker
 {
@@ -58,9 +59,9 @@ namespace Mcma.Aws.JobRepository.Worker
 
             try
             {
-                var mcmaHttp = new McmaHttpClient();
+                var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
-                await mcmaHttp.DeleteAsync(jobProcessId);
+                await resourceManager.DeleteAsync<JobProcess>(jobProcessId);
             }
             catch (Exception error)
             {

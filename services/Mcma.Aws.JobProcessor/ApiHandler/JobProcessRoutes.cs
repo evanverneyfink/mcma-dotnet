@@ -10,12 +10,13 @@ using Mcma.Core.Serialization;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.JobProcessor.ApiHandler
 {
     public static class JobProcessRoutes
     {
-        public static async Task GetJobProcessesAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetJobProcessesAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetJobProcessesAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -27,7 +28,7 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddJobProcessAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddJobProcessAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddJobProcessAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -69,7 +70,7 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
             await lambdaClient.InvokeAsync(invokeRequest);
         }
         
-        public static async Task GetJobProcessAsync(McmaApiRequest request, McmaApiResponse response) 
+        public static async Task GetJobProcessAsync(ApiGatewayRequest request, McmaApiResponse response) 
         {
             Logger.Debug(nameof(GetJobProcessAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -88,7 +89,7 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
             }
         }
         
-        public static async Task DeleteJobProcessAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteJobProcessAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteJobProcessAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -122,7 +123,7 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
             }
         }
 
-        public static async Task ProcessNotificationAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task ProcessNotificationAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 

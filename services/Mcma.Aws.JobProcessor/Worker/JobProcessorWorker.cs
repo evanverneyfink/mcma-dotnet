@@ -95,7 +95,7 @@ namespace Mcma.Aws.JobProcessor.Worker
                         HttpEndpoint = jobProcessId + "/notifications"
                     }
                 };
-                
+
                 jobAssignment = await jobAssignmentResourceEndpoint.PostAsync<JobAssignment>(jobAssignment);
 
                 jobProcess.Status = "SCHEDULED";
@@ -103,6 +103,9 @@ namespace Mcma.Aws.JobProcessor.Worker
             }
             catch (Exception error)
             {
+                Logger.Error("Failed to create job assignment");
+                Logger.Exception(error);
+
                 jobProcess.Status = "FAILED";
                 jobProcess.StatusMessage = error.ToString();
             }

@@ -12,12 +12,13 @@ using Mcma.Core.Serialization;
 using Mcma.Api;
 using Amazon.Lambda.Core;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.ServiceRegistry.ApiHandler
 {
     public static class ServiceRoutes
     {
-        public static async Task GetServicesAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetServicesAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetServicesAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -34,7 +35,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddServiceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddServiceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddServiceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -64,7 +65,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task GetServiceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetServiceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetServiceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -82,7 +83,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             }
         }
 
-        public static async Task PutServiceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task PutServiceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(PutServiceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -108,7 +109,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             response.JsonBody = service.ToMcmaJson();
         }
 
-        public static async Task DeleteServiceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteServiceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteServiceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());

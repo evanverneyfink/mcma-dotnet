@@ -16,8 +16,6 @@ namespace Mcma.Api
 
         public IDictionary<string, string> QueryStringParameters { get; set; }
 
-        public IDictionary<string, string> StageVariables { get; set; }
-
         public string Body { get; set; }
 
         public JToken JsonBody { get; set; }

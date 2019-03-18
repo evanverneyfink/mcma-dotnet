@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Routing.Template;
 
 namespace Mcma.Api
 {
-    internal class McmaApiRoute
+    internal class McmaApiRoute<TRequest> where TRequest : McmaApiRequest
     {
-        public McmaApiRoute(string httpMethod, string path, Func<McmaApiRequest, McmaApiResponse, Task> handler)
+        public McmaApiRoute(string httpMethod, string path, Func<TRequest, McmaApiResponse, Task> handler)
         {
             HttpMethod = httpMethod;
             Path = path;
@@ -21,6 +21,6 @@ namespace Mcma.Api
 
         public TemplateMatcher Template { get; }
         
-        public Func<McmaApiRequest, McmaApiResponse, Task> Handler { get; }
+        public Func<TRequest, McmaApiResponse, Task> Handler { get; }
     }
 }

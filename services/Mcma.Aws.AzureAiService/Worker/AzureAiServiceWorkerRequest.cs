@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Amazon.Lambda.Core;
 using Mcma.Core;
 using Mcma.Api;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.AzureAiService.Worker
 {
@@ -12,7 +13,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
         public string JobAssignmentId { get; set; }
 
-        public McmaApiRequest Request { get; set; }
+        public ApiGatewayRequest Request { get; set; }
 
         public IDictionary<string, string> StageVariables { get; set; }
 

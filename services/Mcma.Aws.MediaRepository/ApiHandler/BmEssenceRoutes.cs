@@ -10,12 +10,13 @@ using Mcma.Aws;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.MediaRepository.ApiHandler
 {
     public static class BmEssenceRoutes
     {
-        public static async Task GetBmEssencesAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetBmEssencesAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetBmEssencesAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -29,7 +30,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddBmEssenceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddBmEssenceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -59,7 +60,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task GetBmEssenceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetBmEssenceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -78,7 +79,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             }
         }
 
-        public static async Task PutBmEssenceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task PutBmEssenceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(PutBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -104,7 +105,7 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
             response.JsonBody = bmEssence.ToMcmaJson();
         }
 
-        public static async Task DeleteBmEssenceAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteBmEssenceAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteBmEssenceAsync));
             Logger.Debug(request.ToMcmaJson().ToString());

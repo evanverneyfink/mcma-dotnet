@@ -37,10 +37,10 @@ namespace Mcma.Aws.WorkflowService.Worker
                 await UpdateJobAssignmentStatusAsync(resourceManager, table, jobAssignmentId, "RUNNING", null);
 
                 // 2. Retrieving WorkflowJob
-                var workflowJob = await RetrieveWorkflowJobAsync(table, jobAssignmentId);
+                var workflowJob = await RetrieveWorkflowJobAsync(resourceManager, table, jobAssignmentId);
 
                 // 3. Retrieve JobProfile
-                var jobProfile = await RetrieveJobProfileAsync(workflowJob);
+                var jobProfile = await RetrieveJobProfileAsync(resourceManager, workflowJob);
 
                 // 4. Retrieve job inputParameters
                 var jobInput = workflowJob.JobInput;
@@ -131,31 +131,24 @@ namespace Mcma.Aws.WorkflowService.Worker
             }
         }
 
-        private static async Task<JobProfile> RetrieveJobProfileAsync(Job job)
+        private static async Task<JobProfile> RetrieveJobProfileAsync(ResourceManager resourceManager, Job job)
         {
-            return await RetrieveResourceAsync<JobProfile>(job.JobProfile, "job.jobProfile");
+            return await RetrieveResourceAsync<JobProfile>(resourceManager, job.JobProfile, "job.jobProfile");
         }
 
-        private static async Task<Job> RetrieveWorkflowJobAsync(DynamoDbTable table, string jobAssignmentId)
+        private static async Task<Job> RetrieveWorkflowJobAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
 
-            return await RetrieveResourceAsync<Job>(jobAssignment.Job, "jobAssignment.job");
+            return await RetrieveResourceAsync<Job>(resourceManager, jobAssignment.Job, "jobAssignment.job");
         }
 
-        private static async Task<T> RetrieveResourceAsync<T>(string resource, string resourceName)
+        private static async Task<T> RetrieveResourceAsync<T>(ResourceManager resourceManager, string resourceId, string resourceName)
         {
-            var mcmaHttp = new McmaHttpClient();
-            try
-            {
-                var response = await mcmaHttp.GetAsync(resource);
-                
-                return await response.EnsureSuccessStatusCode().Content.ReadAsObjectFromJsonAsync<T>();
-            }
-            catch
-            {
-                throw new Exception("Failed to retrieve '" + resourceName + "' from url '" + resource + "'");
-            }
+            if (string.IsNullOrWhiteSpace(resourceId))
+                throw new Exception($"{resourceName} does not exist");
+
+            return await resourceManager.ResolveAsync<T>(resourceId);
         }
 
         private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable table, string jobAssignmentId, JobParameterBag jobOutput)

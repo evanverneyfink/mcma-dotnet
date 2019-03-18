@@ -8,6 +8,7 @@ using Mcma.Api;
 using Mcma.Aws;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]

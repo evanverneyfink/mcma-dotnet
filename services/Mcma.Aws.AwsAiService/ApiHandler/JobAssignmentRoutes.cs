@@ -10,12 +10,13 @@ using Mcma.Core.Serialization;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.AwsAiService.ApiHandler
 {
     public static class JobAssignmentRoutes
     {
-        public static async Task GetJobAssignmentsAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetJobAssignmentsAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetJobAssignmentsAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -27,7 +28,7 @@ namespace Mcma.Aws.AwsAiService.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
         
-        public static async Task DeleteJobAssignmentsAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteJobAssignmentsAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteJobAssignmentsAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -42,7 +43,7 @@ namespace Mcma.Aws.AwsAiService.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddJobAssignmentAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddJobAssignmentAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -78,13 +79,18 @@ namespace Mcma.Aws.AwsAiService.ApiHandler
                 FunctionName = request.StageVariables["WorkerLambdaFunctionName"],
                 InvocationType = "Event",
                 LogType = "None",
-                Payload = new { action = "ProcessJobAssignment", request = request, jobAssignmentId = jobAssignmentId }.ToMcmaJson().ToString()
+                Payload = new
+                {
+                    action = "ProcessJobAssignment",
+                    stageVariables = request.StageVariables,
+                    jobAssignmentId = jobAssignmentId
+                }.ToMcmaJson().ToString()
             };
 
             await lambdaClient.InvokeAsync(invokeRequest);
         }
 
-        public static async Task GetJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response) 
+        public static async Task GetJobAssignmentAsync(ApiGatewayRequest request, McmaApiResponse response) 
         {
             Logger.Debug(nameof(GetJobAssignmentAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -103,7 +109,7 @@ namespace Mcma.Aws.AwsAiService.ApiHandler
             }
         }
         
-        public static async Task DeleteJobAssignmentAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteJobAssignmentAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteJobAssignmentAsync));
             Logger.Debug(request.ToMcmaJson().ToString());

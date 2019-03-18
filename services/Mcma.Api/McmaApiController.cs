@@ -9,9 +9,9 @@ using Mcma.Core.Logging;
 
 namespace Mcma.Api
 {
-    public class McmaApiController
+    public class McmaApiController<TRequest> where TRequest : McmaApiRequest
     {
-        private List<McmaApiRoute> Routes { get; } = new List<McmaApiRoute>();
+        private List<McmaApiRoute<TRequest>> Routes { get; } = new List<McmaApiRoute<TRequest>>();
 
         private IDictionary<string, string> GetDefaultResponseHeaders()
             => new Dictionary<string, string>
@@ -21,12 +21,12 @@ namespace Mcma.Api
                 ["Access-Control-Allow-Origin"] = "*"
             };
 
-        public void AddRoute(string method, string path, Func<McmaApiRequest, McmaApiResponse, Task> handler)
+        public void AddRoute(string method, string path, Func<TRequest, McmaApiResponse, Task> handler)
         {
-            Routes.Add(new McmaApiRoute(method, path, handler));
+            Routes.Add(new McmaApiRoute<TRequest>(method, path, handler));
         }
 
-        public async Task<McmaApiResponse> HandleRequestAsync(McmaApiRequest request)
+        public async Task<McmaApiResponse> HandleRequestAsync(TRequest request)
         {
             var response = new McmaApiResponse
             {

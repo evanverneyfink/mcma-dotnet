@@ -9,12 +9,13 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using System.Net;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.ServiceRegistry.ApiHandler
 {
     public static class JobProfileRoutes
     {
-        public static async Task GetJobProfilesAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetJobProfilesAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetJobProfilesAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -35,7 +36,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task AddJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task AddJobProfileAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(AddJobProfileAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -65,7 +66,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             Logger.Debug(response.ToMcmaJson().ToString());
         }
 
-        public static async Task GetJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task GetJobProfileAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(GetJobProfileAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -83,7 +84,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             }
         }
 
-        public static async Task PutJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task PutJobProfileAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(PutJobProfileAsync));
             Logger.Debug(request.ToMcmaJson().ToString());
@@ -109,7 +110,7 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
             response.JsonBody = jobProfile.ToMcmaJson();
         }
 
-        public static async Task DeleteJobProfileAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task DeleteJobProfileAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(DeleteJobProfileAsync));
             Logger.Debug(request.ToMcmaJson().ToString());

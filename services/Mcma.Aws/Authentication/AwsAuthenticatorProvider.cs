@@ -49,9 +49,9 @@ namespace Mcma.Aws.Authentication
                 result = JObject.Parse(authContext).ToMcmaObject<T>();
                 return true;
             }
-            catch (Exception ex)
+            catch// (Exception ex)
             {
-                Logger.Warn($"Failed to parse an auth context object of type {typeof(T).Name} from JSON '{authContext}'.{Environment.NewLine}Exception:{Environment.NewLine}{ex}");
+                //Logger.Warn($"Failed to parse an auth context object of type {typeof(T).Name} from JSON '{authContext}'.{Environment.NewLine}Exception:{Environment.NewLine}{ex}");
 
                 result = default(T);
                 return false;

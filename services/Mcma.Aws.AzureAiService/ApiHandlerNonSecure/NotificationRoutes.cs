@@ -11,12 +11,13 @@ using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using Mcma.Core.Logging;
 using System.Linq;
+using Mcma.Aws.Api;
 
 namespace Mcma.Aws.AzureAiService.ApiHandlerNonSecure
 {
     public static class NotificationRoutes
     {
-        public static async Task ProcessNotificationAsync(McmaApiRequest request, McmaApiResponse response)
+        public static async Task ProcessNotificationAsync(ApiGatewayRequest request, McmaApiResponse response)
         {
             Logger.Debug(nameof(ProcessNotificationAsync));
             Logger.Debug(request.ToMcmaJson().ToString());

@@ -15,6 +15,7 @@ using Mcma.Core.Serialization;
 using Newtonsoft.Json.Linq;
 using Amazon.Lambda.APIGatewayEvents;
 using Mcma.Core.Logging;
+using Mcma.Aws.Api;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
