@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 using Mcma.Core.Logging;
 
@@ -26,6 +27,9 @@ namespace Mcma.Core
             var dict = GetPropertyDictionary(caseSensitive);
             return dict.ContainsKey(key) ? (T)dict[key] : default(T);
         }
+
+        public T GetOrAdd<T>(string key, bool caseSensitive = true) where T : new()
+            => TryGet<T>(key, false, out var val) ? val : Set(key, new T());
         
         public bool TryGet<T>(string key, out T value) => TryGet<T>(key, true, out value);
         
@@ -39,9 +43,11 @@ namespace Mcma.Core
                 value = (T)dict[key];
                 return true;
             }
-            Logger.Debug($"Failed to find key '{key}' in dynamic object of type {GetType().Name}. Existing keys are {string.Join(", ", dict.Keys)}.");
+            
             return false;
         }
+
+        public T Set<T>(string key, T value) => (T)(this[key] = value);
 
         private IDictionary<string, object> GetPropertyDictionary(bool caseSensitive)
             => caseSensitive ? PropertyDictionary : new Dictionary<string, object>(PropertyDictionary, StringComparer.OrdinalIgnoreCase);

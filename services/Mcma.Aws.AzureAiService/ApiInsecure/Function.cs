@@ -12,7 +12,7 @@ using Mcma.Aws.Api;
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
 
-namespace Mcma.Aws.AzureAiService.ApiHandlerNonSecure
+namespace Mcma.Aws.AzureAiService.ApiInsecure
 {
     public class Function
     {

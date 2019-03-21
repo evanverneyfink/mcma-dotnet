@@ -35,8 +35,8 @@ namespace Mcma.Aws.AzureAiService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(AzureAiServiceWorkerRequest @event)
         {
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var resourceManager = @event.GetAwsV4ResourceManager();
+            var table = new DynamoDbTable(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
             var azure = new AzureConfig(@event);
 
@@ -58,7 +58,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 ValidateJobProfile(jobProfile, jobInput);
 
                 S3Locator inputFile;
-                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
+                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
                     throw new Exception("Invalid or missing input file.");
 
                 string mediaFileUrl;
@@ -84,9 +84,9 @@ namespace Mcma.Aws.AzureAiService.Worker
 
                         Logger.Debug($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
                         var mcmaHttp = new McmaHttpClient();
-                        var response = await mcmaHttp.GetAsync(authTokenUrl, customHeaders);
+                        var response = await mcmaHttp.GetAsync(authTokenUrl, headers: customHeaders).WithErrorHandling();
 
-                        var apiToken = response.Content.ReadAsJsonAsync();
+                        var apiToken = await response.Content.ReadAsJsonAsync();
                         Logger.Debug($"Azure API Token: {apiToken}");
 
                         // call the Azure API to process the video 
@@ -112,34 +112,28 @@ namespace Mcma.Aws.AzureAiService.Worker
                         var secureHost = new Uri(jobAssignmentId, UriKind.Absolute).Host;
                         var nonSecureHost = new Uri(@event.StageVariables["PublicUrlNonSecure"], UriKind.Absolute).Host;
 
-                        var callbackUrl = jobAssignmentId.Replace(secureHost, nonSecureHost);
-                        callbackUrl = callbackUrl + "/notifications";
-                        callbackUrl = Uri.EscapeDataString(callbackUrl);
+                        var callbackUrl = Uri.EscapeDataString(jobAssignmentId.Replace(secureHost, nonSecureHost) + "/notifications");
 
                         var postVideoUrl = azure.ApiUrl + "/" + azure.Location + "/Accounts/" + azure.AccountID + "/Videos?accessToken=" + apiToken + "&name=" + inputFile.AwsS3Key + "&callbackUrl=" + callbackUrl + "&videoUrl=" + mediaFileUrl + "&fileName=" + inputFile.AwsS3Key;
                         
                         Logger.Debug($"Call Azure Video Indexer API: Doing a POST on {postVideoUrl}");
-                        var postVideoResponse = await mcmaHttp.PostAsync(postVideoUrl, null);
+                        var postVideoResponse = await mcmaHttp.PostAsync(postVideoUrl, null, customHeaders).WithErrorHandling();
 
-                        if ((int)postVideoResponse.StatusCode != 200)
-                            Logger.Error($"Azure Video Indexer - Error processing the video: ${response.StatusCode} ${(response.Content != null ? await response.Content.ReadAsStringAsync() : "[no body]")}");
-                        else
+                        var azureAssetInfo = await postVideoResponse.Content.ReadAsJsonAsync();
+                        Logger.Debug("azureAssetInfo: ", azureAssetInfo);
+
+                        try
                         {
-                            var azureAssetInfo = await postVideoResponse.Content.ReadAsJsonAsync();
-                            Logger.Debug("azureAssetInfo: ", azureAssetInfo);
+                            var jobOutput = new JobParameterBag();
+                            jobOutput["jobInfo"] = azureAssetInfo;
 
-                            try
-                            {
-                                var jobOutput = new JobParameterBag();
-                                jobOutput["jobInfo"] = azureAssetInfo;
-
-                                await UpdateJobAssignmentWithOutputAsync(table, jobAssignmentId, jobOutput);
-                            }
-                            catch (Exception error)
-                            {
-                                Logger.Error("Error updating the job", error);
-                            }
+                            await UpdateJobAssignmentWithOutputAsync(table, jobAssignmentId, jobOutput);
                         }
+                        catch (Exception error)
+                        {
+                            Logger.Error("Error updating the job", error);
+                        }
+
                         break;
                 }
 
@@ -163,8 +157,8 @@ namespace Mcma.Aws.AzureAiService.Worker
         {
             var jobAssignmentId = @event.JobAssignmentId;
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var resourceManager = @event.GetAwsV4ResourceManager();
+            var table = new DynamoDbTable(@event.StageVariables["TableName"]);
             var azure = new AzureConfig(@event);
 
             var azureVideoId = @event.Notification?.Id;
@@ -182,18 +176,19 @@ namespace Mcma.Aws.AzureAiService.Worker
 
                 Logger.Debug($"Generate Azure Video Indexer Token: Doing a GET on {authTokenUrl}");
                 var mcmaHttp = new McmaHttpClient();
-                var response = await mcmaHttp.GetAsync(authTokenUrl, customHeaders);
+                var response = await mcmaHttp.GetAsync(authTokenUrl, headers: customHeaders).WithErrorHandling();
 
-                var apiToken = response.Content.ReadAsJsonAsync();
+                var apiToken = await response.Content.ReadAsJsonAsync();
                 Logger.Debug($"Azure API Token: {apiToken}");
                 
-                var metadataFromAzureVideoIndexer = azure.ApiUrl + "/" + azure.Location + "/Accounts/" + azure.AccountID + "/Videos/" + azureVideoId + "/Index?accessToken=" + apiToken + "&language=English";
+                var metadataFromAzureVideoIndexer =
+                    $"{azure.ApiUrl}/{azure.Location}/Accounts/{azure.AccountID}/Videos/{azureVideoId}/Index?accessToken={apiToken}&language=English";
 
-                Logger.Debug("Get the azure video metadata : Doing a GET on  : ", metadataFromAzureVideoIndexer);
-                var indexedVideoMetadataResponse = await mcmaHttp.GetAsync(metadataFromAzureVideoIndexer);
+                Logger.Debug($"Getting Azure video metadata from: {metadataFromAzureVideoIndexer}");
+                var indexedVideoMetadataResponse = await mcmaHttp.GetAsync(metadataFromAzureVideoIndexer, headers: customHeaders).WithErrorHandling();
 
                 var videoMetadata = await indexedVideoMetadataResponse.Content.ReadAsJsonAsync();
-                Logger.Debug("Azure AI video metadata : ", videoMetadata);
+                Logger.Debug($"Azure AI video metadata: {videoMetadata}");
 
                 //Need to hydrate the destination bucket from the job input
                 var workflowJob = await RetrieveJobAsync(resourceManager, table, jobAssignmentId);
@@ -202,7 +197,7 @@ namespace Mcma.Aws.AzureAiService.Worker
                 var jobInput = workflowJob.JobInput;
                 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var jobOutputBucket = outputLocation.AwsS3Bucket;
@@ -257,7 +252,7 @@ namespace Mcma.Aws.AzureAiService.Worker
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.HasProperty(parameter.ParameterName, false))
+                    if (!jobInput.HasProperty(parameter.ParameterName))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

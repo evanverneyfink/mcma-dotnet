@@ -1,8 +1,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Mcma.Core.Utility
 {
@@ -366,7 +368,13 @@ namespace Mcma.Core.Utility
         public static IEnumerable<string> SplitIntoChunks(this string source, int chunkSize)
         {
             for (var i = 0; i < source.Length; i += chunkSize)
-                yield return (i + chunkSize >= source.Length) ? source.Substring(i, chunkSize) : source.Substring(i);
+                yield return (i + chunkSize) < source.Length ? source.Substring(i, chunkSize) : source.Substring(i);
+        }
+
+        public static async Task<string> ReadStringFromStreamAsync(this Stream stream)
+        {
+            using (var textReader = new StreamReader(stream))
+                return await textReader.ReadToEndAsync();
         }
     }
 }

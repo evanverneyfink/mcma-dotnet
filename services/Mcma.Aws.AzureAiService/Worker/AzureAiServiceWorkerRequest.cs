@@ -7,13 +7,11 @@ using Mcma.Aws.Api;
 
 namespace Mcma.Aws.AzureAiService.Worker
 {
-    public class AzureAiServiceWorkerRequest
+    public class AzureAiServiceWorkerRequest : IStageVariableProvider
     {
         public string Action { get; set; }
 
         public string JobAssignmentId { get; set; }
-
-        public ApiGatewayRequest Request { get; set; }
 
         public IDictionary<string, string> StageVariables { get; set; }
 

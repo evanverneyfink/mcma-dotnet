@@ -60,7 +60,7 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
             {
                 var transformJob = await resourceManager.ResolveAsync<TransformJob>(transformJobId);
 
-                outputFile = transformJob.JobOutput.Get<S3Locator>(nameof(outputFile), false);
+                outputFile = transformJob.JobOutput.Get<S3Locator>(nameof(outputFile));
             }
 
             var s3Bucket = WEBSITE_BUCKET;

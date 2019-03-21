@@ -75,11 +75,10 @@ namespace Mcma.Aws.Workflows.Ai.RegisterCelebritiesInfoAzure
             var azureResult = await s3Object.ResponseStream.ReadJsonFromStreamAsync();
             Logger.Debug("AzureResult: {0}", azureResult.ToString(Formatting.Indented));
 
-            dynamic bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
+            var bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
 
-            var azureAiMetadata = bmContent.Get<McmaExpandoObject>("AzureAiMetadata", false) ?? new McmaExpandoObject();
-            azureAiMetadata = azureResult.ToMcmaObject<McmaExpandoObject>();
-            bmContent.AzureAiMetadata = azureAiMetadata;
+            // set response on the AzureAiMetadata object on the BMContent
+            bmContent["azureAiMetadata"] = azureResult.ToMcmaObject<McmaExpandoObject>();
 
             await resourceManager.UpdateAsync(bmContent);
 

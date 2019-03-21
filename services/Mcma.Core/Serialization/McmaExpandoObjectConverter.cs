@@ -18,8 +18,8 @@ namespace Mcma.Core.Serialization
 
             IDictionary<string, object> expando = new McmaExpandoObject();
 
-            foreach (var jsonProp in jObj.Properties().Where(p => !p.Name.Equals(TypeJsonPropertyName, StringComparison.OrdinalIgnoreCase)))
-                expando[jsonProp.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(jsonProp.Value, serializer);
+            foreach (var jsonProp in jObj.Properties())
+                expando[jsonProp.Name] = ConvertJsonToClr(jsonProp.Value, serializer);
 
             return expando;
         }
@@ -33,7 +33,7 @@ namespace Mcma.Core.Serialization
                 if (keyValuePair.Value == null && serializer.NullValueHandling == NullValueHandling.Ignore)
                     continue;
 
-                writer.WritePropertyName(keyValuePair.Key.PascalCaseToCamelCase());
+                writer.WritePropertyName(keyValuePair.Key);
                 serializer.Serialize(writer, keyValuePair.Value);
             }
 

@@ -9,7 +9,7 @@ namespace Mcma.Core
 
     public static class McmaHttpClientExtensions
     {
-        private static async Task<HttpResponseMessage> WithErrorHandling(this Task<HttpResponseMessage> responseTask)
+        public static async Task<HttpResponseMessage> WithErrorHandling(this Task<HttpResponseMessage> responseTask)
             => await (await responseTask).ThrowIfFailedAsync();
 
         public static async Task<T> ReadAsObjectFromJsonAsync<T>(this Task<HttpResponseMessage> responseTask)

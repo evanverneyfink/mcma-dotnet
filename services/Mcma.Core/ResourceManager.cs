@@ -109,7 +109,7 @@ namespace Mcma.Core
             throw new Exception("ResourceManager: Failed to find service to create resource of type '" + typeof(T).Name + "'.");
         }
 
-        public async Task<T> UpdateAsync<T>(T resource) where T : IMcmaResource
+        public async Task<T> UpdateAsync<T>(T resource) where T : McmaResource
         {
             if (!Services.Any())
                 await InitAsync();
@@ -125,7 +125,7 @@ namespace Mcma.Core
             return await resp.Content.ReadAsObjectFromJsonAsync<T>();
         }
 
-        public async Task DeleteAsync(IMcmaResource resource)
+        public async Task DeleteAsync(McmaResource resource)
         {
             if (!Services.Any())
                 await InitAsync();
@@ -176,7 +176,7 @@ namespace Mcma.Core
                 : await HttpClient.GetAndReadAsObjectFromJsonAsync<T>(url);
         }
 
-        public async Task SendNotificationAsync<T>(T resource, NotificationEndpoint notificationEndpoint) where T : IMcmaResource
+        public async Task SendNotificationAsync<T>(T resource, NotificationEndpoint notificationEndpoint) where T : McmaResource
         {
             if (string.IsNullOrWhiteSpace(notificationEndpoint?.HttpEndpoint))
                 return;

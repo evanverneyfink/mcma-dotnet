@@ -55,7 +55,7 @@ namespace Mcma.Aws.Workflows.Conform.DecideTranscodeReqs
 
             var bme = await resourceManager.ResolveAsync<BMEssence>(@event["data"]["bmEssence"].ToString());
 
-            var technicalMetadata = bme.Get<object>("technicalMetadata", false).ToMcmaJson();
+            var technicalMetadata = bme.Get<object>("technicalMetadata").ToMcmaJson();
 
             var ebuCoreMain = technicalMetadata["ebucore:ebuCoreMain"];
             var coreMetadata = ebuCoreMain["ebucore:coreMetadata"][0];

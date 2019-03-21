@@ -23,7 +23,7 @@ namespace Mcma.Core.Serialization
             if (objectType == null)
             {
                 // check for match in core types
-                objectType = Type.GetType(typeof(IMcmaObject).AssemblyQualifiedName.Replace(nameof(IMcmaObject), typeString));
+                objectType = Type.GetType(typeof(McmaObject).AssemblyQualifiedName.Replace(nameof(McmaObject), typeString));
             }
 
             return objectType;

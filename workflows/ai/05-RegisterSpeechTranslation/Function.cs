@@ -9,6 +9,7 @@ using Mcma.Aws;
 using Mcma.Core;
 using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
+using Mcma.Core.Utility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -72,18 +73,15 @@ namespace Mcma.Aws.Workflows.Ai.RegisterSpeechTranslation
                 throw new Exception("Unable to translation file in bucket '" + s3Bucket + "' with key '" + s3Key + "'", error);
             }
 
-            var transcriptionResult = await s3Object.ResponseStream.ReadJsonFromStreamAsync();
-            Logger.Debug("Translation result: {0}", transcriptionResult.ToString(Formatting.Indented));
+            var translationResult = await s3Object.ResponseStream.ReadStringFromStreamAsync();
+            Logger.Debug("Translation result: {0}", translationResult);
 
-            dynamic bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
+            var bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
 
-            if (!bmContent.HasProperty("AwsAiMetadata", false))
-                bmContent.AwsAiMetadata = new McmaExpandoObject();
-            
-            if (!bmContent.AwsAiMetadata.HasProperty("Transcription", false))
-                bmContent.AwsAiMetadata.Transcription = new McmaExpandoObject();
-
-            bmContent.AwsAiMetadata.Transcription.Translation = transcriptionResult;
+            bmContent
+                .GetOrAdd<McmaExpandoObject>("awsAiMetadata")
+                    .GetOrAdd<McmaExpandoObject>("transcription")
+                        .Set("translation", translationResult);
 
             await resourceManager.UpdateAsync(bmContent);
 

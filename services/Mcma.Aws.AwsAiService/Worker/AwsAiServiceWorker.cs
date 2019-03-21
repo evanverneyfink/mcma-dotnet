@@ -37,7 +37,7 @@ namespace Mcma.Aws.AwsAiService.Worker
             new Dictionary<string, Func<AwsAiServiceWorkerRequest, Task>>
             {
                 ["ProcessJobAssignment"] = ProcessJobAssignmentAsync,
-                ["ProcessTranscribeResult"] = ProcessTranscribeResultAsync,
+                ["ProcessTranscribeJobResult"] = ProcessTranscribeJobResultAsync,
                 ["ProcessRekognitionResult"] = ProcessRekognitionResultAsync
             };
 
@@ -65,11 +65,11 @@ namespace Mcma.Aws.AwsAiService.Worker
                 ValidateJobProfile(jobProfile, jobInput);
 
                 S3Locator inputFile;
-                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
+                if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
                     throw new Exception("Invalid or missing input file.");
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 switch (jobProfile.Name)
@@ -131,8 +131,8 @@ namespace Mcma.Aws.AwsAiService.Worker
 
                         var translateParameters = new TranslateTextRequest
                         {
-                            SourceLanguageCode = jobInput.TryGet("sourceLanguageCode", false, out string srcLanguageCode) ? srcLanguageCode : "auto",
-                            TargetLanguageCode = jobInput.Get<string>("targetLanguageCode", false),
+                            SourceLanguageCode = jobInput.TryGet("sourceLanguageCode", out string srcLanguageCode) ? srcLanguageCode : "auto",
+                            TargetLanguageCode = jobInput.Get<string>("targetLanguageCode"),
                             Text = inputText
                         };
 
@@ -209,9 +209,9 @@ namespace Mcma.Aws.AwsAiService.Worker
             }
         }
 
-        public static async Task ProcessTranscribeResultAsync(AwsAiServiceWorkerRequest @event)
+        public static async Task ProcessTranscribeJobResultAsync(AwsAiServiceWorkerRequest @event)
         {
-            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
@@ -221,7 +221,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 var jobInput = job.JobInput;
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var copySource = Uri.EscapeDataString(@event.OutputFile.AwsS3Bucket + "/" + @event.OutputFile.AwsS3Key);
@@ -288,7 +288,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
         public static async Task ProcessRekognitionResultAsync(AwsAiServiceWorkerRequest @event)
         {
-            var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
             var table = new DynamoDbTable(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
@@ -298,7 +298,7 @@ namespace Mcma.Aws.AwsAiService.Worker
                 var jobInput = job.JobInput;
 
                 S3Locator outputLocation;
-                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
+                if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
                     throw new Exception("Invalid or missing output location.");
 
                 var s3Bucket = outputLocation.AwsS3Bucket;
@@ -396,7 +396,7 @@ namespace Mcma.Aws.AwsAiService.Worker
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.HasProperty(parameter.ParameterName, false))
+                    if (!jobInput.HasProperty(parameter.ParameterName))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

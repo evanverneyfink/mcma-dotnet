@@ -45,9 +45,9 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
             var bmContentId = request.StageVariables["PublicUrl"] + "/bm-contents/" + Guid.NewGuid();
             bmContent.Id = bmContentId;
-            bmContent["Status"] = "NEW";
-            bmContent["DateCreated"] = DateTime.UtcNow;
-            bmContent["DateModified"] = bmContent["DateCreated"];
+            bmContent.Status = "NEW";
+            bmContent.DateCreated = DateTime.UtcNow;
+            bmContent.DateModified = bmContent.DateCreated;
 
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
@@ -98,9 +98,9 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
 
             var bmContentId = request.StageVariables["PublicUrl"] + request.Path;
             bmContent.Id = bmContentId;
-            bmContent["DateModified"] = DateTime.UtcNow;
-            if (!bmContent.TryGet("DateCreated", out object dateCreated) || dateCreated == null)
-                bmContent["DateCreated"] = bmContent["DateModified"];
+            bmContent.DateModified = DateTime.UtcNow;
+            if (!bmContent.DateCreated.HasValue)
+                bmContent.DateCreated = bmContent.DateModified;
 
             await table.PutAsync<BMContent>(bmContentId, bmContent);
 

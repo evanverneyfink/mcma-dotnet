@@ -1,8 +1,10 @@
 namespace Mcma.Core
 {
-    public class BMEssence : McmaDynamicResource
+    public class BMEssence : McmaResource
     {
-        public string BMContent { get; set; }
+        public string BmContent { get; set; }
+
+        public string Status { get; set; }
 
         public Locator[] Locations { get; set; }
     }

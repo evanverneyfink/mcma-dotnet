@@ -69,16 +69,22 @@ namespace Mcma.Aws.Workflows.Ai.TranslateSpeechTranscription
                 throw new Exception($"JobProfile '{JOB_PROFILE_NAME}' not found");
 
             // writing speech transcription to a textfile in temp bucket
-            dynamic bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
+            var bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
 
-            if (bmContent.AwsAiMetadata?.Transcription?.Original == null)
+            // get the transcript from the BMContent
+            var transcript =
+                bmContent.Get<McmaExpandoObject>("awsAiMetadata")
+                         ?.Get<McmaExpandoObject>("transcription")
+                         ?.Get<string>("original");
+
+            if (transcript == null)
                 throw new Exception("Missing transcription on BMContent");
 
             var s3Params = new PutObjectRequest
             {
                 BucketName = TEMP_BUCKET,
                 Key = "AiInput/" + Guid.NewGuid() + ".txt",
-                ContentBody = bmContent.awsAiMetadata.transcription.original
+                ContentBody = transcript
             };
 
             var s3Client = new AmazonS3Client();
@@ -89,11 +95,16 @@ namespace Mcma.Aws.Workflows.Ai.TranslateSpeechTranscription
                 JobProfile = jobProfileId,
                 JobInput = new JobParameterBag
                 {
-                    ["inputFile"] = @event["data"]["mediaFileLocator"],
-                    ["outputLocation"] = new S3Locator
+                    ["inputFile"] = new S3Locator
                     {
                         AwsS3Bucket = s3Params.BucketName,
                         AwsS3Key = s3Params.Key
+                    },
+                    ["targetLanguageCode"] = "ja",
+                    ["outputLocation"] = new S3Locator
+                    {
+                        AwsS3Bucket = TEMP_BUCKET,
+                        AwsS3Key = JOB_RESULTS_PREFIX
                     }
                 },
                 NotificationEndpoint = new NotificationEndpoint

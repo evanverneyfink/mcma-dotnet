@@ -29,7 +29,8 @@ namespace Mcma.Aws.Workflows.ProcessWorkflowCompletion
                 var jobData = new JobBase
                 {
                     Status = "COMPLETED",
-                    Progress = 100
+                    Progress = 100,
+                    JobOutput = @event["output"]?.ToMcmaObject<JobParameterBag>()
                 };
                 await resourceManager.SendNotificationAsync(jobData, @event["notificationEndpoint"].ToMcmaObject<NotificationEndpoint>());
             }

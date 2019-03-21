@@ -34,7 +34,7 @@ public static AggregateTask BuildServices = new AggregateTask(
     new BuildProject("services/Mcma.Aws.AwsAiService/SnsTrigger"),
     new BuildProject("services/Mcma.Aws.AwsAiService/Worker"),
     new BuildProject("services/Mcma.Aws.AzureAiService/ApiHandler"),
-    new BuildProject("services/Mcma.Aws.AzureAiService/ApiHandlerNonSecure"),
+    new BuildProject("services/Mcma.Aws.AzureAiService/ApiInsecure"),
     new BuildProject("services/Mcma.Aws.AzureAiService/Worker")
 );
 
@@ -72,6 +72,6 @@ public static AggregateTask BuildServicesSln = new AggregateTask(
     new BuildProject("services/Mcma.Aws.AwsAiService/SnsTrigger", false, false),
     new BuildProject("services/Mcma.Aws.AwsAiService/Worker", false, false),
     new BuildProject("services/Mcma.Aws.AzureAiService/ApiHandler", false, false),
-    new BuildProject("services/Mcma.Aws.AzureAiService/ApiHandlerNonSecure", false, false),
+    new BuildProject("services/Mcma.Aws.AzureAiService/ApiInsecure", false, false),
     new BuildProject("services/Mcma.Aws.AzureAiService/Worker", false, false)
 );

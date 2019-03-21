@@ -86,15 +86,12 @@ namespace Mcma.Aws.Workflows.Ai.RegisterSpeechToTextOutput
             foreach (var ts in transcripts)
                 transcript += ts["transcript"].Value<string>();
 
-            dynamic bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
-
-            if (!bmContent.HasProperty("AwsAiMetadata", false))
-                bmContent.AwsAiMetadata = new McmaExpandoObject();
+            var bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
             
-            if (!bmContent.AwsAiMetadata.HasProperty("Transcription", false))
-                bmContent.AwsAiMetadata.Transcription = new McmaExpandoObject();
-
-            bmContent.AwsAiMetadata.Transcription.Original = transcript;
+            bmContent
+                .GetOrAdd<McmaExpandoObject>("awsAiMetadata")
+                    .GetOrAdd<McmaExpandoObject>("transcription")
+                        .Set("original", transcript);
 
             await resourceManager.UpdateAsync(bmContent);
         }

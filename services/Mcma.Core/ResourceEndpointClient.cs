@@ -77,7 +77,7 @@ namespace Mcma.Core
             => await ExecuteAsync(async httpClient => await httpClient.DeleteAsync(url));
 
         private static string GetUrl(string url, object body)
-            => body is IMcmaResource mcmaResource && !string.IsNullOrWhiteSpace(mcmaResource.Id) && string.IsNullOrWhiteSpace(url)
+            => body is McmaResource mcmaResource && !string.IsNullOrWhiteSpace(mcmaResource.Id) && string.IsNullOrWhiteSpace(url)
                 ? mcmaResource.Id
                 : url;
     }

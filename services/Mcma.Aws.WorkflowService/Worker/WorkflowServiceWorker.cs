@@ -125,7 +125,7 @@ namespace Mcma.Aws.WorkflowService.Worker
             if (jobProfile.InputParameters != null)
             {
                 foreach (var parameter in jobProfile.InputParameters) {
-                    if (!jobInput.HasProperty(parameter.ParameterName, false))
+                    if (!jobInput.HasProperty(parameter.ParameterName))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
                 }
             }

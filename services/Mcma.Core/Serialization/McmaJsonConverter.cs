@@ -32,25 +32,6 @@ namespace Mcma.Core.Serialization
             return objectType;
         }
 
-        protected bool TryReadClrProperty(Type objectType, object obj, JsonSerializer serializer, JProperty jsonProp)
-        {
-            var clrProp = objectType.GetProperties().FirstOrDefault(p => p.CanWrite && p.Name.Equals(jsonProp.Name, StringComparison.OrdinalIgnoreCase));
-            if (clrProp != null)
-            {
-                try
-                {
-                    clrProp.SetValue(obj, jsonProp.Value.Type != JTokenType.Null ? jsonProp.Value.ToObject(clrProp.PropertyType, serializer) : null);
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"Failed to set property {clrProp.Name} on type {objectType.Name} with JSON value {jsonProp.Value.ToString()}: {ex}");
-                }
-            }
-
-            return false;
-        }
-
         protected bool IsMcmaObject(JObject jObj)
             => jObj.Properties().Any(p => p.Name.Equals(TypeJsonPropertyName, StringComparison.OrdinalIgnoreCase));
 
@@ -61,30 +42,6 @@ namespace Mcma.Core.Serialization
                 throw new Exception($"Unrecognized @type specified in JSON: {jObj[TypeJsonPropertyName]}");
             
             return jObj.ToObject(objType, serializer);
-        }
-
-        protected void WriteTypeProperty(JsonWriter writer, object value)
-        {
-            writer.WritePropertyName(TypeJsonPropertyName);
-            writer.WriteValue(((IMcmaObject)value).Type);
-        }
-
-        protected void WriteClrProperties(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            var properties =
-                value.GetType().GetProperties()
-                    .Where(p => p.Name != nameof(IMcmaObject.Type) && p.CanRead && p.GetIndexParameters().Length == 0)
-                    .ToList();
-                    
-            foreach (var property in properties)
-            {
-                var propValue = property.GetValue(value);
-                if (propValue == null && serializer.NullValueHandling == NullValueHandling.Ignore)
-                    continue;
-                
-                writer.WritePropertyName(char.ToLower(property.Name[0]) + property.Name.Substring(1));
-                serializer.Serialize(writer, propValue);
-            }
         }
 
         protected object ConvertJsonToClr(JToken token, JsonSerializer serializer)
@@ -115,20 +72,10 @@ namespace Mcma.Core.Serialization
                     return token.Select(x => ConvertJsonToClr(x, serializer)).ToArray();
                 case JTokenType.Object:
                     var jObj = (JObject)token;
-                    return IsMcmaObject(jObj) ? CreateMcmaObject(jObj, serializer) : CreateDynamicObject(jObj, serializer);
+                    return IsMcmaObject(jObj) ? CreateMcmaObject(jObj, serializer) : jObj.ToObject<McmaExpandoObject>(serializer);
                 default:
                     return token;
             }
-        }
-
-        protected object CreateDynamicObject(JObject jObj, JsonSerializer serializer)
-        {
-            IDictionary<string, object> expando = new McmaExpandoObject();
-
-            foreach (var property in jObj.Properties())
-                expando[property.Name.CamelCaseToPascalCase()] = ConvertJsonToClr(property.Value, serializer);
-
-            return expando;
         }
     }
 }

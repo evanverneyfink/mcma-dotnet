@@ -1,7 +1,7 @@
 namespace Mcma.Core
 {
 
-    public class JobParameterBag : McmaDynamicObject
+    public class JobParameterBag : McmaObject
     {
 
     }

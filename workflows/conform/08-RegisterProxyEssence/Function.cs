@@ -27,7 +27,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterProxyEssence
         private BMEssence CreateBmEssence(BMContent bmContent, S3Locator location)
             => new BMEssence
             {
-                BMContent = bmContent.Id,
+                BmContent = bmContent.Id,
                 Locations = new Locator[] {location}
             };
 

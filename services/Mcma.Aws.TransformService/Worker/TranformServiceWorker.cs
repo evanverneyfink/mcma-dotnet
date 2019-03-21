@@ -56,11 +56,11 @@ namespace Mcma.Aws.TransformService.Worker
                 {
                     case JOB_PROFILE_CREATE_PROXY_LAMBDA:
                         S3Locator inputFile;
-                        if (!jobInput.TryGet<S3Locator>(nameof(inputFile), false, out inputFile))
+                        if (!jobInput.TryGet<S3Locator>(nameof(inputFile), out inputFile))
                             throw new Exception("Invalid or missing input file.");
 
                         S3Locator outputLocation;
-                        if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), false, out outputLocation))
+                        if (!jobInput.TryGet<S3Locator>(nameof(outputLocation), out outputLocation))
                             throw new Exception("Invalid or missing output location.");
                         
                         if (string.IsNullOrWhiteSpace(inputFile.AwsS3Bucket) || string.IsNullOrWhiteSpace(inputFile.AwsS3Key))
@@ -168,7 +168,7 @@ namespace Mcma.Aws.TransformService.Worker
 
             if (jobProfile.InputParameters != null)
                 foreach (var parameter in jobProfile.InputParameters)
-                    if (!jobInput.HasProperty(parameter.ParameterName, false))
+                    if (!jobInput.HasProperty(parameter.ParameterName))
                         throw new Exception("jobInput misses required input parameter '" + parameter.ParameterName + "'");
         }
 

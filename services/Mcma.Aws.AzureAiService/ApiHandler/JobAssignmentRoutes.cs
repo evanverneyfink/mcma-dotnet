@@ -79,7 +79,12 @@ namespace Mcma.Aws.AzureAiService.ApiHandler
                 FunctionName = request.StageVariables["WorkerLambdaFunctionName"],
                 InvocationType = "Event",
                 LogType = "None",
-                Payload = new { action = "ProcessJobAssignment", request = request, jobAssignmentId = jobAssignmentId }.ToMcmaJson().ToString()
+                Payload = new
+                {
+                    action = "ProcessJobAssignment",
+                    stageVariables = request.StageVariables,
+                    jobAssignmentId = jobAssignmentId
+                }.ToMcmaJson().ToString()
             };
 
             await lambdaClient.InvokeAsync(invokeRequest);

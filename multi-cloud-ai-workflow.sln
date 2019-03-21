@@ -99,7 +99,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.ProcessW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.Workflows.WorkflowActivityCallbackHandler", "workflows\WorkflowActivityCallbackHandler\Mcma.Aws.Workflows.WorkflowActivityCallbackHandler.csproj", "{454E1710-9CAF-4645-9DF1-A28324E1C1D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.AzureAiService.ApiHandlerNonSecure", "services\Mcma.Aws.AzureAiService\ApiHandlerNonSecure\Mcma.Aws.AzureAiService.ApiHandlerNonSecure.csproj", "{89125436-D8E5-494D-85A8-D49F48E040C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Aws.AzureAiService.ApiInsecure", "services\Mcma.Aws.AzureAiService\ApiInsecure\Mcma.Aws.AzureAiService.ApiInsecure.csproj", "{89125436-D8E5-494D-85A8-D49F48E040C0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcma.Worker", "services\Mcma.Worker\Mcma.Worker.csproj", "{36B2131C-B50C-4A26-A1FA-FB376F25C7BA}"
 EndProject

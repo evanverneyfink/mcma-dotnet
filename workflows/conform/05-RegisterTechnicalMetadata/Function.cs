@@ -30,7 +30,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterTechnicalMetadata
         {
             return new BMEssence
             {
-                BMContent = bmContent.Id,
+                BmContent = bmContent.Id,
                 Locations = new Locator[] {location},
                 ["technicalMetadata"] = mediaInfo
             };

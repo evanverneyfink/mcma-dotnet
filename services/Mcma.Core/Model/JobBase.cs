@@ -10,7 +10,7 @@ namespace Mcma.Core
 
         public double? Progress { get; set; }
 
-        public IDictionary<string, double?> ParallelProgress { get; set;}
+        public IDictionary<string, double?> ParallelProgress { get; set; } = new Dictionary<string, double?>();
 
         public NotificationEndpoint NotificationEndpoint { get; set; }
 

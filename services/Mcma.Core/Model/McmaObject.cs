@@ -1,6 +1,6 @@
 namespace Mcma.Core
 {
-    public abstract class McmaObject : IMcmaObject
+    public abstract class McmaObject : McmaExpandoObject
     {
         protected McmaObject()
         {

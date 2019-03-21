@@ -44,7 +44,7 @@ namespace Mcma.Aws.JobProcessor.Worker
                 if (jobProfile.InputParameters != null)
                 {
                     foreach (var parameter in jobProfile.InputParameters)
-                        if (!jobInput.HasProperty(parameter.ParameterName, false))
+                        if (!jobInput.HasProperty(parameter.ParameterName))
                             throw new Exception("jobInput is missing required input parameter '" + parameter.ParameterName + "'");
                 }
 

@@ -17,18 +17,28 @@ namespace Mcma.Core.Serialization
             Converters =
             {
                 new McmaObjectConverter(),
-                new McmaDynamicObjectConverter(),
                 new McmaExpandoObjectConverter()
             }
         };
 
-        public static JsonSerializer Serializer { get; private set; } = JsonSerializer.CreateDefault(DefaultSettings);
+        public static readonly JsonSerializerSettings PreserveCasingSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Converters =
+            {
+                new McmaObjectConverter(),
+                new McmaExpandoObjectConverter()
+            }
+        };
 
-        public static void SetJsonSerializerSettings(JsonSerializerSettings settings) => Serializer = JsonSerializer.CreateDefault(settings);
+        public static JsonSerializer DefaultSerializer { get; private set; } = JsonSerializer.CreateDefault(DefaultSettings);
 
-        public static T ToMcmaObject<T>(this JToken json) => json.ToObject<T>(Serializer);
+        public static void SetJsonSerializerSettings(JsonSerializerSettings settings) => DefaultSerializer = JsonSerializer.CreateDefault(settings);
 
-        public static JToken ToMcmaJson<T>(this T obj) => JToken.FromObject(obj, Serializer);
+        public static T ToMcmaObject<T>(this JToken json) => json.ToObject<T>(DefaultSerializer);
+
+        public static JToken ToMcmaJson<T>(this T obj, bool preserveCasing = false)
+            => JToken.FromObject(obj, preserveCasing ? JsonSerializer.CreateDefault(PreserveCasingSettings) : DefaultSerializer);
 
         public static async Task<JToken> ReadJsonFromStreamAsync(this Stream stream)
         {

@@ -4,10 +4,10 @@ namespace Mcma.Aws.AzureAiService.Worker
     {
         public AzureConfig(AzureAiServiceWorkerRequest @event)
         {
-            ApiUrl = @event.Request.StageVariables["AzureApiUrl"];
-            Location = @event.Request.StageVariables["AzureLocation"];
-            AccountID = @event.Request.StageVariables["AzureAccountID"];
-            SubscriptionKey = @event.Request.StageVariables["AzureSubscriptionKey"];
+            ApiUrl = @event.StageVariables["AzureApiUrl"];
+            Location = @event.StageVariables["AzureLocation"];
+            AccountID = @event.StageVariables["AzureAccountID"];
+            SubscriptionKey = @event.StageVariables["AzureSubscriptionKey"];
         }
 
         public string ApiUrl { get; }

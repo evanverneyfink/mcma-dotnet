@@ -63,7 +63,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
                         Payload = JObject.FromObject(new
                         {
                             action = "ProcessRekognitionResult",
-                            stageVariables = StageVariables,
+                            stageVariables = StageVariables.ToDictionary(),
                             jobAssignmentId,
                             jobExternalInfo = new
                             {

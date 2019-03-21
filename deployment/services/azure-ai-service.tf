@@ -18,11 +18,11 @@ resource "aws_lambda_function" "azure-ai-service-api-handler" {
 #################################
 
 resource "aws_lambda_function" "azure-ai-service-api-handler-non-secure" {
-  filename         = "./../services/Mcma.Aws.AzureAiService/ApiHandlerNonSecure/dist/lambda.zip"
+  filename         = "./../services/Mcma.Aws.AzureAiService/ApiInsecure/dist/lambda.zip"
   function_name    = "${format("%.64s", "${var.global_prefix}-azure-ai-service-api-handler-non-secure")}"
   role             = "${aws_iam_role.iam_for_exec_lambda.arn}"
-  handler          = "Mcma.Aws.AzureAiService.ApiHandler::Mcma.Aws.AzureAiService.ApiHandlerNonSecure.Function::Handler"
-  source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.AzureAiService/ApiHandlerNonSecure/dist/lambda.zip"))}"
+  handler          = "Mcma.Aws.AzureAiService.ApiInsecure::Mcma.Aws.AzureAiService.ApiInsecure.Function::Handler"
+  source_code_hash = "${base64sha256(file("./../services/Mcma.Aws.AzureAiService/ApiInsecure/dist/lambda.zip"))}"
   runtime          = "dotnetcore2.1"
   timeout          = "30"
   memory_size      = "256"

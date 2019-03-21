@@ -13,7 +13,7 @@ using Mcma.Core.Logging;
 using System.Linq;
 using Mcma.Aws.Api;
 
-namespace Mcma.Aws.AzureAiService.ApiHandlerNonSecure
+namespace Mcma.Aws.AzureAiService.ApiInsecure
 {
     public static class NotificationRoutes
     {
@@ -24,7 +24,7 @@ namespace Mcma.Aws.AzureAiService.ApiHandlerNonSecure
             
             var table = new DynamoDbTable(request.StageVariables["TableName"]);
 
-            var jobAssignmentId = request.StageVariables["PublicUrl"] + request.Path; //"/job-assignments/" + request.PathVariables["id"];
+            var jobAssignmentId = request.StageVariables["PublicUrl"] + "/job-assignments/" + request.PathVariables["id"];
 
             var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
 
@@ -64,7 +64,7 @@ namespace Mcma.Aws.AzureAiService.ApiHandlerNonSecure
                     }.ToMcmaJson().ToString()
             };
 
-            Logger.Debug("Invoking Lambda: {0}", invokeRequest.ToMcmaJson().ToString());
+            Logger.Debug("Invoking Lambda with payload: {0}", invokeRequest.Payload);
 
             await lambdaClient.InvokeAsync(invokeRequest);
         }

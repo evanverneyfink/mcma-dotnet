@@ -37,9 +37,9 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
                     if (!Regex.IsMatch(awsS3Key, "^TranscriptionJob-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.json$"))
                         throw new Exception("S3 key '" + awsS3Key + "' is not an expected file name for transcribe output");
 
-                    var transcribeJobUUID = awsS3Key.Substring(awsS3Key.IndexOf("-") + 1, awsS3Key.LastIndexOf("."));
+                    var transcribeJobUuid = awsS3Key.Substring(awsS3Key.IndexOf("-") + 1, awsS3Key.LastIndexOf(".") - awsS3Key.IndexOf("-") - 1);
 
-                    var jobAssignmentId = StageVariables.PublicUrl + "/job-assignments/" + transcribeJobUUID;
+                    var jobAssignmentId = StageVariables.PublicUrl + "/job-assignments/" + transcribeJobUuid;
 
                     var invokeParams = new InvokeRequest
                     {
@@ -49,7 +49,7 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
                         Payload = new
                         {
                             action = "ProcessTranscribeJobResult",
-                            stageVariables = StageVariables,
+                            stageVariables = StageVariables.ToDictionary(),
                             jobAssignmentId,
                             outputFile = new S3Locator { AwsS3Bucket = awsS3Bucket, AwsS3Key = awsS3Key }
                         }.ToMcmaJson().ToString()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization;
+using Amazon.Rekognition.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Mcma.Aws;
@@ -54,7 +55,7 @@ namespace Mcma.Aws.Workflows.Ai.RegisterCelebritiesInfoAws
             if (!job.JobOutput.TryGet<S3Locator>(nameof(outputFile), false, out outputFile))
                 throw new Exception($"AI job '{jobId}' does not specify an output file.");
 
-            // get media info
+            // get the response from Rekognition, stored as a file on S3
             var s3Bucket = outputFile.AwsS3Bucket;
             var s3Key = outputFile.AwsS3Key;
             GetObjectResponse s3Object;
@@ -72,38 +73,39 @@ namespace Mcma.Aws.Workflows.Ai.RegisterCelebritiesInfoAws
                 throw new Exception("Unable to celebrities info file in bucket '" + s3Bucket + "' with key '" + s3Key + "'", error);
             }
 
-            dynamic celebritiesResult = (await s3Object.ResponseStream.ReadJsonFromStreamAsync()).ToMcmaObject<McmaDynamicObject>();
+            // read the result from the file in S3 as a Rekognition response object
+            var celebritiesResult = (await s3Object.ResponseStream.ReadJsonFromStreamAsync()).ToMcmaObject<GetCelebrityRecognitionResponse>();
 
-            dynamic celebritiesMap = new McmaExpandoObject();
+            var celebrityRecognitionList = new List<CelebrityRecognition>();
+            var lastRecognitions = new Dictionary<string, long>();
 
-            List<McmaExpandoObject> celebritiesResultList = celebritiesResult.Celebrities.ToList();
-
-            for (var i = 0; i < celebritiesResultList.Count;)
+            foreach (var celebrity in celebritiesResult.Celebrities)
             {
-                dynamic celebrity = celebritiesResultList[i];
+                // get the timestamp of the last time we hit a recognition for this celebrity (if any)
+                var lastRecognized = lastRecognitions.ContainsKey(celebrity.Celebrity.Name) ? lastRecognitions[celebrity.Celebrity.Name] : default(long?);
 
-                var prevCelebrity = celebritiesMap.HasProperty(celebrity.Celebrity.Name) ? celebritiesMap[celebrity.Celebrity.Name] : null;
-                if ((prevCelebrity == null || celebrity.Timestamp - prevCelebrity.Timestamp > 3000) && celebrity.Celebrity.Confidence > 50)
+                // we only want recognitions at 3 second intervals, and only when the confidence is at least 50%
+                if ((!lastRecognized.HasValue || celebrity.Timestamp - lastRecognized.Value > 3000) && celebrity.Celebrity.Confidence > 50)
                 {
-                    celebritiesMap[celebrity.Celebrity.Name] = celebrity;
-                    i++;
-                }
-                else
-                {
-                    celebritiesResultList.RemoveAt(i);
+                    // mark the timestamp of the last recognition for this celebrity
+                    lastRecognitions[celebrity.Celebrity.Name] = celebrity.Timestamp;
+
+                    // add to the list that we actually want to store
+                    celebrityRecognitionList.Add(celebrity);
                 }
             }
 
-            celebritiesResult.Celebrities = celebritiesResultList.ToArray();
+            // store the filtered results back on the original object
+            celebritiesResult.Celebrities = celebrityRecognitionList;
 
             Logger.Debug("AWS Celebrities result", celebritiesResult.ToMcmaJson().ToString());
 
-            dynamic bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
+            var bmContent = await resourceManager.ResolveAsync<BMContent>(@event["input"]["bmContent"].Value<string>());
 
-            if (!bmContent.HasProperty("AwsAiMetadata", false))
-                bmContent.AwsAiMetadata = new McmaExpandoObject();
-
-            bmContent.AwsAiMetadata.Celebrities = celebritiesResult;
+            // store the celebrity data back onto the AwsAiMetadata property on the BMContent, either using the existing object or creating a new one
+            bmContent
+                .GetOrAdd<McmaExpandoObject>("awsAiMetadata")
+                    .Set("celebrities", celebritiesResult.ToMcmaJson(true));
 
             await resourceManager.UpdateAsync(bmContent);
 
