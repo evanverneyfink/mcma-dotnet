@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\services\Mcma.Core\Mcma.Core.csproj" />
-    <ProjectReference Include="..\..\..\services\Mcma.Aws\Mcma.Aws.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Mcma.Core" Version="0.0.1-beta" />
+    <PackageReference Include="Mcma.Aws" Version="0.0.1-beta" />
+ 
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.27.1" />

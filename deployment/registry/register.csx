@@ -6,9 +6,8 @@
 #r "nuget:AWSSDK.CognitoIdentityProvider, 3.3.11.22"
 #r "nuget:AWSSDK.Extensions.CognitoAuthentication, 0.9.4"
 #r "nuget:AWSSDK.S3, 3.3.29"
-
-#r "../../services/Mcma.Core/dist/staging/Mcma.Core.dll"
-#r "../../services/Mcma.Aws/dist/staging/Mcma.Aws.dll"
+#r "nuget:Mcma.Core, 0.0.1-beta"
+#r "nuget:Mcma.Aws, 0.0.1-beta"
 
 using Amazon;
 using Amazon.Runtime;
