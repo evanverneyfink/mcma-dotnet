@@ -3,7 +3,7 @@
 
 #r "nuget:Newtonsoft.Json, 11.0.2"
 
-#r "nuget:Mcma.Core, 0.0.1-beta"
+#r "nuget:Mcma.Core, 0.0.1.1"
 
 using System.Threading.Tasks;
 using Mcma.Core;

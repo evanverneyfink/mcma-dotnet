@@ -2,12 +2,10 @@
 #load "../../build/build.csx"
 
 #r "nuget:Newtonsoft.Json, 11.0.2"
-#r "nuget:AWSSDK.Core, 3.3.29.12"
 #r "nuget:AWSSDK.CognitoIdentityProvider, 3.3.11.22"
 #r "nuget:AWSSDK.Extensions.CognitoAuthentication, 0.9.4"
-#r "nuget:AWSSDK.S3, 3.3.29"
-#r "nuget:Mcma.Core, 0.0.1-beta"
-#r "nuget:Mcma.Aws, 0.0.1-beta"
+#r "nuget:Mcma.Core, 0.0.1.1"
+#r "nuget:Mcma.Aws, 0.0.1.1"
 
 using Amazon;
 using Amazon.Runtime;
