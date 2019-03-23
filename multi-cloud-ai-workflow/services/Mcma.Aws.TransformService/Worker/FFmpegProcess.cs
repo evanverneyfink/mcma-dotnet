@@ -27,7 +27,7 @@ namespace Mcma.Aws.TransformService.Worker
         public FFmpegProcess(params string[] args)
         {
             ProcessStartInfo = 
-                new ProcessStartInfo(Path.Combine(Directory.GetCurrentDirectory(), FFmpegFolder + "/mediainfo"), string.Join(" ", args))
+                new ProcessStartInfo(Path.Combine(Directory.GetCurrentDirectory(), FFmpegFolder + "/ffmpeg"), string.Join(" ", args))
                 {
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,

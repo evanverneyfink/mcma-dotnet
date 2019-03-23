@@ -25,9 +25,7 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
         private static readonly string WEBSITE_BUCKET = Environment.GetEnvironmentVariable(nameof(WEBSITE_BUCKET));
         
         private string GetTransformJobId(JToken @event)
-        {
-            return @event["data"]["transformJobId"]?.FirstOrDefault()?.ToString();
-        }
+            => @event["data"]["transformJob"]?.FirstOrDefault()?.ToString();
 
         public async Task<S3Locator> Handler(JToken @event, ILambdaContext context)
         {
@@ -52,12 +50,16 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
             S3Locator outputFile;
             if (transformJobId == null)
             {
+                Logger.Debug("Transform job ID is null. Transform was not done. Using original essence as proxy.");
+
                 var bme = await resourceManager.ResolveAsync<BMEssence>(@event["data"]["bmEssence"]?.ToString());
 
                 outputFile = (S3Locator)bme.Locations[0];
             }
             else
             {
+                Logger.Debug($"Getting proxy location from transform job {transformJobId}.");
+
                 var transformJob = await resourceManager.ResolveAsync<TransformJob>(transformJobId);
 
                 outputFile = transformJob.JobOutput.Get<S3Locator>(nameof(outputFile));
@@ -81,7 +83,8 @@ namespace Mcma.Aws.Workflows.Conform.CopyProxyToWebsiteStorage
                     DestinationBucket = s3Bucket,
                     DestinationKey = s3Key
                 };
-                var destS3 = new AmazonS3Client(RegionEndpoint.GetBySystemName(data.Location));
+                var regionEndpoint = RegionEndpoint.GetBySystemName(!string.IsNullOrWhiteSpace(data.Location) ? (string)data.Location : "us-east-1");
+                var destS3 = new AmazonS3Client(regionEndpoint);
                 await destS3.CopyObjectAsync(copyParams);
             }
             catch (Exception error)

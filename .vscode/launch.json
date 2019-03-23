@@ -30,9 +30,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build tests",
-            "program": "${workspaceFolder}/tests/Mcma.Tests/bin/Debug/netcoreapp2.1/Mcma.Tests.dll",
+            "program": "bin/Debug/netcoreapp2.1/Mcma.Tests.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/tests/Mcma.Tests",
+            "cwd": "${workspaceFolder}/multi-cloud-ai-workflow/tests/Mcma.Tests",
             "stopAtEntry": false,
             "console": "internalConsole"
         }

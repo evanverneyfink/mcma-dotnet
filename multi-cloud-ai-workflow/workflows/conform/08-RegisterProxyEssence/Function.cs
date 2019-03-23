@@ -22,7 +22,7 @@ namespace Mcma.Aws.Workflows.Conform.RegisterProxyEssence
     public class Function
     {
         private string GetTransformJobId(JToken @event)
-            => @event["data"]["transformJobId"]?.FirstOrDefault()?.Value<string>();
+            => @event["data"]["transformJob"]?.FirstOrDefault()?.Value<string>();
 
         private BMEssence CreateBmEssence(BMContent bmContent, S3Locator location)
             => new BMEssence

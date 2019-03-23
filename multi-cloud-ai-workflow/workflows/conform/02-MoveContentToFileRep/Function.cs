@@ -57,7 +57,8 @@ namespace Mcma.Aws.Workflows.Conform.MoveContentToFileRep
             {
                 var s3Client = new AmazonS3Client();
                 var destBucketLocation = await s3Client.GetBucketLocationAsync(s3Bucket);
-                var copyClient = new AmazonS3Client(RegionEndpoint.GetBySystemName(destBucketLocation.Location));
+                var regionEndpoint = RegionEndpoint.GetBySystemName(!string.IsNullOrWhiteSpace(destBucketLocation.Location) ? (string)destBucketLocation.Location : "us-east-1");
+                var copyClient = new AmazonS3Client(regionEndpoint);
                 await copyClient.CopyObjectAsync(new CopyObjectRequest
                 {
                     SourceBucket = inputFile.AwsS3Bucket,

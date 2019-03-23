@@ -32,7 +32,7 @@ namespace Mcma.Aws.Workflows.Conform.ShortTranscode
 
         private const string JOB_PROFILE_NAME = "CreateProxyLambda";
         
-        public async Task Handler(JToken @event, ILambdaContext context)
+        public async Task<string> Handler(JToken @event, ILambdaContext context)
         {
             var resourceManager = AwsEnvironment.GetAwsV4ResourceManager();
 
@@ -69,7 +69,7 @@ namespace Mcma.Aws.Workflows.Conform.ShortTranscode
             if (jobProfileId == null)
                 throw new Exception($"JobProfile '{JOB_PROFILE_NAME}' not found");
 
-            var createProxyJob = new AmeJob
+            var createProxyJob = new TransformJob
             {
                 JobProfile = jobProfileId,
                 JobInput = new JobParameterBag
@@ -88,6 +88,8 @@ namespace Mcma.Aws.Workflows.Conform.ShortTranscode
             };
 
             createProxyJob = await resourceManager.CreateAsync(createProxyJob);
+
+            return createProxyJob.Id;
         }
     }
 }

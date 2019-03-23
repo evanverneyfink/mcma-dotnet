@@ -24,12 +24,12 @@
             "label": "deploy",
             "type": "shell",
             "group": "build",
-            "command": ".\\build.bat",
+            "command": "./build.bat",
             "args": [
                 "deploy"
             ],
             "options": {
-                "cwd": ".\\multi-cloud-ai-workflow"
+                "cwd": "./multi-cloud-ai-workflow"
             },
             "presentation": {
                 "echo": true,
@@ -44,12 +44,12 @@
             "label": "register",
             "type": "shell",
             "group": "build",
-            "command": ".\\build.bat",
+            "command": "./build.bat",
             "args": [
                 "register"
             ],
             "options": {
-                "cwd": ".\\multi-cloud-ai-workflow"
+                "cwd": "./multi-cloud-ai-workflow"
             },
             "presentation": {
                 "echo": true,
@@ -64,12 +64,12 @@
             "label": "deploy (no build)",
             "type": "shell",
             "group": "build",
-            "command": ".\\build.bat",
+            "command": "./build.bat",
             "args": [
                 "deployNoBuild"
             ],
             "options": {
-                "cwd": ".\\multi-cloud-ai-workflow"
+                "cwd": "./multi-cloud-ai-workflow"
             },
             "presentation": {
                 "echo": true,
@@ -82,11 +82,10 @@
         },
         {
             "label": "build tests",
-            "command": "dotnet",
-            "args": [
-                "build",
-                "tests/Mcma.Tests"
-            ],
+            "command": "dotnet build",
+            "options": {
+                "cwd": "./multi-cloud-ai-workflow/tests/Mcma.Tests"
+            },
             "type": "shell",
             "group": "build",
             "presentation": {

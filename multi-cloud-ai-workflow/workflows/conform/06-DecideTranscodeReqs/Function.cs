@@ -58,36 +58,50 @@ namespace Mcma.Aws.Workflows.Conform.DecideTranscodeReqs
             var technicalMetadata = bme.Get<object>("technicalMetadata").ToMcmaJson();
 
             var ebuCoreMain = technicalMetadata["ebucore:ebuCoreMain"];
-            var coreMetadata = ebuCoreMain["ebucore:coreMetadata"][0];
-            var containerFormat = coreMetadata["ebucore:format"][0]["ebucore:containerFormat"][0];
-            var duration = coreMetadata["ebucore:format"][0]["ebucore:duration"][0];
+            var coreMetadata = ebuCoreMain["ebucore:coreMetadata"]?.FirstOrDefault();
+            var containerFormat = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:containerFormat"]?.FirstOrDefault();
+            var duration = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:duration"]?.FirstOrDefault();
 
             var video = new
             {
-                Codec = containerFormat["ebucore:codec"][0]["ebucore:codecIdentifier"][0]["dc:identifier"][0]["#value"],
-                BitRate = coreMetadata["ebucore:format"][0]["ebucore:videoFormat"][0]["ebucore:bitRate"][0]["#value"],
-                Format = coreMetadata["ebucore:format"][0]["ebucore:videoFormat"][0]["@videoFormatName"],
-                NormalPlayTime = duration["ebucore:normalPlayTime"][0]["#value"]
+                Codec = containerFormat["ebucore:codec"]?.FirstOrDefault()?["ebucore:codecIdentifier"]?.FirstOrDefault()?["dc:identifier"]?.FirstOrDefault()?["#value"],
+                BitRate = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:videoFormat"]?.FirstOrDefault()?["ebucore:bitRate"]?.FirstOrDefault()?["#value"],
+                Format = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:videoFormat"]?.FirstOrDefault()?["@videoFormatName"],
+                NormalPlayTime = duration["ebucore:normalPlayTime"]?.FirstOrDefault()?["#value"]
             };
 
-            var codec = video.Codec.ToString();
-            var format = video.Format.ToString();
-            var bitRate = double.Parse(video.BitRate.ToString());
-            var mbyte = (bitRate / 8) / (1024 * 1024);
+            var codec = video.Codec?.ToString();
+            var format = video.Format?.ToString();
+            var parsedBitRate = double.TryParse(video.BitRate.ToString(), out var bitRate);
+            var mbyte = parsedBitRate ? (bitRate / 8) / (1024 * 1024) : default(double?);
 
-            if ((codec == VIDEO_CODEC || codec == VIDEO_CODEC_ISOM) && format == VIDEO_FORMAT && mbyte <= VIDEO_BITRATE_MB)
+            if ((codec == VIDEO_CODEC || codec == VIDEO_CODEC_ISOM) && format == VIDEO_FORMAT && mbyte.HasValue && mbyte.Value <= VIDEO_BITRATE_MB)
                 return "none";
 
-            var normalPlayTime = video.NormalPlayTime.ToString();
-            var hour = Regex.Match(normalPlayTime, "(\\d*)H");
-            var min = Regex.Match(normalPlayTime, "(\\d*)M");
-            var sec = Regex.Match(normalPlayTime, "(\\d*)S");
-            
-            var totalSeconds =
-                CalcSeconds(
-                    hour.Success ? int.Parse(hour.Groups[1].Captures[0].Value) : 0,
-                    min.Success ? int.Parse(min.Groups[1].Captures[0].Value) : 0,
-                    double.Parse(sec.Groups[1].Captures[0].Value));
+            var normalPlayTime = video.NormalPlayTime?.ToString() ?? string.Empty;
+
+            double totalSeconds;
+
+            var ptSeconds = Regex.Match(normalPlayTime, "PT([0-9\\.]+)S");
+            if (ptSeconds.Success)
+            {
+                totalSeconds = double.Parse(ptSeconds.Groups[1].Captures[0].Value);
+            }
+            else
+            {
+                var hour = Regex.Match(normalPlayTime, "(\\d*)H");
+                var min = Regex.Match(normalPlayTime, "(\\d*)M");
+                var sec = Regex.Match(normalPlayTime, "(\\d*)S");
+
+                if (!sec.Success)
+                    throw new Exception($"Invalid play time in technical metadata: {normalPlayTime ?? "[null]"}");
+                
+                totalSeconds =
+                    CalcSeconds(
+                        hour.Success ? int.Parse(hour.Groups[1].Captures[0].Value) : 0,
+                        min.Success ? int.Parse(min.Groups[1].Captures[0].Value) : 0,
+                        double.Parse(sec.Groups[1].Captures[0].Value));
+            }
 
             Logger.Debug("[Total Seconds]: " + totalSeconds);
 

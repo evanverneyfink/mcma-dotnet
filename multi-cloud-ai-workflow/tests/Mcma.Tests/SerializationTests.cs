@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Aws;
+using System.Text.RegularExpressions;
 
 namespace Mcma.Tests
 {
@@ -55,5 +56,60 @@ namespace Mcma.Tests
             Console.WriteLine(((S3Locator)bmEssence.Locations[0]).AwsS3Key);
             Console.WriteLine(((S3Locator)bmEssence.Locations[0]).AwsS3Bucket);
         }
+
+        private const string VIDEO_FORMAT = "AVC";
+        private const string VIDEO_CODEC = "mp42";
+        private const string VIDEO_CODEC_ISOM = "isom";
+        private const int VIDEO_BITRATE_MB = 2;
+
+        private static readonly int THRESHOLD_SECONDS = int.Parse(Environment.GetEnvironmentVariable("THESHOLD_SECONDS"));
+        
+        public static string ToMcmaObject_ShouldDeserializeBmEssenceMxf()
+        {
+            var bmEssenceJObj = JObject.Parse(File.ReadAllText("json/BmEssence-mxf.json"));
+
+            var bme = bmEssenceJObj.ToMcmaObject<BMEssence>();
+
+            var technicalMetadata = bme.Get<object>("technicalMetadata").ToMcmaJson();
+
+            var ebuCoreMain = technicalMetadata["ebucore:ebuCoreMain"];
+            var coreMetadata = ebuCoreMain["ebucore:coreMetadata"]?.FirstOrDefault();
+            var containerFormat = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:containerFormat"]?.FirstOrDefault();
+            var duration = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:duration"]?.FirstOrDefault();
+
+            var video = new
+            {
+                Codec = containerFormat["ebucore:codec"]?.FirstOrDefault()?["ebucore:codecIdentifier"]?.FirstOrDefault()?["dc:identifier"]?.FirstOrDefault()?["#value"],
+                BitRate = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:videoFormat"]?.FirstOrDefault()?["ebucore:bitRate"]?.FirstOrDefault()?["#value"],
+                Format = coreMetadata["ebucore:format"]?.FirstOrDefault()?["ebucore:videoFormat"]?.FirstOrDefault()?["@videoFormatName"],
+                NormalPlayTime = duration["ebucore:normalPlayTime"]?.FirstOrDefault()?["#value"]
+            };
+
+            var codec = video.Codec?.ToString();
+            var format = video.Format?.ToString();
+            var parsedBitRate = double.TryParse(video.BitRate.ToString(), out var bitRate);
+            var mbyte = parsedBitRate ? (bitRate / 8) / (1024 * 1024) : default(double?);
+
+            if ((codec == VIDEO_CODEC || codec == VIDEO_CODEC_ISOM) && format == VIDEO_FORMAT && mbyte.HasValue && mbyte.Value <= VIDEO_BITRATE_MB)
+                return "none";
+
+            var normalPlayTime = video.NormalPlayTime.ToString();
+            var hour = Regex.Match(normalPlayTime, "(\\d*)H");
+            var min = Regex.Match(normalPlayTime, "(\\d*)M");
+            var sec = Regex.Match(normalPlayTime, "(\\d*)S");
+            
+            var totalSeconds =
+                CalcSeconds(
+                    hour.Success ? int.Parse(hour.Groups[1].Captures[0].Value) : 0,
+                    min.Success ? int.Parse(min.Groups[1].Captures[0].Value) : 0,
+                    double.Parse(sec.Groups[1].Captures[0].Value));
+
+            Console.WriteLine("[Total Seconds]: " + totalSeconds);
+
+            return totalSeconds <= THRESHOLD_SECONDS ? "short" : "long";
+        }
+
+        private static double CalcSeconds(int hour, int minute, double seconds)
+            => (hour * 60 * 60) + (minute * 60) + seconds;
     }
 }
