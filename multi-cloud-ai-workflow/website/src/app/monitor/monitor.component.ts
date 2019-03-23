@@ -28,9 +28,9 @@ export class MonitorComponent implements OnInit {
       this.workflowService.getWorkflowJobs().pipe(
         map(jobs =>
           jobs.map(j =>
-            /*!JobStatus.isFinished(j)
+            !JobStatus.isFinished(j)
               ? this.workflowService.pollForCompletion(j.id)
-              : */of(new WorkflowJobViewModel(j)))),
+              : of(new WorkflowJobViewModel(j)))),
         tap(jobs => {
           if (jobs && jobs.length > 0) {
             this.selectedWorkflowJobVm$ = jobs[0];
