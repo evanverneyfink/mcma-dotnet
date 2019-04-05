@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Amazon.Lambda.Core;
-using Mcma.Core;
-using Mcma.Api;
-using Mcma.Aws.Api;
+using Mcma.Aws.S3;
 
 namespace Mcma.Aws.AzureAiService.Worker
 {

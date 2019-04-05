@@ -6,6 +6,7 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
 using System.Collections.Generic;
+using Mcma.Aws.DynamoDb;
 
 namespace Mcma.Aws.JobProcessor.Worker
 {
@@ -21,12 +22,12 @@ namespace Mcma.Aws.JobProcessor.Worker
 
         internal static async Task CreateJobAssignmentAsync(JobProcessorWorkerRequest @event)
         {
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobProcess>(@event.StageVariables["TableName"]);
 
             var jobProcessId = @event.JobProcessId;
-            var jobProcess = await table.GetAsync<JobProcess>(jobProcessId);
+            var jobProcess = await table.GetAsync(jobProcessId);
 
             try
             {
@@ -112,7 +113,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             jobProcess.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<JobProcess>(jobProcessId, jobProcess);
+            await table.PutAsync(jobProcessId, jobProcess);
 
             await resourceManager.SendNotificationAsync(jobProcess, jobProcess.NotificationEndpoint);
         }
@@ -123,7 +124,7 @@ namespace Mcma.Aws.JobProcessor.Worker
 
             try
             {
-                var resourceManager = @event.Request.GetAwsV4ResourceManager();
+                var resourceManager = @event.GetAwsV4ResourceManager();
                 await resourceManager.DeleteAsync<JobAssignment>(jobAssignmentId);
             }
             catch (Exception error)
@@ -138,9 +139,9 @@ namespace Mcma.Aws.JobProcessor.Worker
             var notification = @event.Notification;
             var notificationJobData = notification.Content.ToMcmaObject<JobBase>();
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobProcess>(@event.StageVariables["TableName"]);
 
-            var jobProcess = await table.GetAsync<JobProcess>(jobProcessId);
+            var jobProcess = await table.GetAsync(jobProcessId);
 
             // not updating job if it already was marked as completed or failed.
             if (jobProcess.Status == "COMPLETED" || jobProcess.Status == "FAILED")
@@ -155,9 +156,9 @@ namespace Mcma.Aws.JobProcessor.Worker
             jobProcess.JobOutput = notificationJobData.JobOutput;
             jobProcess.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<JobProcess>(jobProcessId, jobProcess);
+            await table.PutAsync(jobProcessId, jobProcess);
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobProcess, jobProcess.NotificationEndpoint);
         }

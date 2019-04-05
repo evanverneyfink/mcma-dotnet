@@ -3,10 +3,11 @@ using Amazon.Lambda.Core;
 using Mcma.Core;
 using Mcma.Api;
 using Mcma.Aws.Api;
+using System.Collections.Generic;
 
 namespace Mcma.Aws.WorkflowService.Worker
 {
-    public class WorkflowServiceWorkerRequest
+    public class WorkflowServiceWorkerRequest : IStageVariableProvider
     {
         public string Action { get; set; }
 
@@ -14,6 +15,6 @@ namespace Mcma.Aws.WorkflowService.Worker
 
         public Notification Notification { get; set; }
 
-        public ApiGatewayRequest Request { get; set; }
+        public IDictionary<string, string> StageVariables { get; set; }
     }
 }

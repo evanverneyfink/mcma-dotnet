@@ -9,6 +9,7 @@ using Amazon.StepFunctions;
 using Amazon.StepFunctions.Model;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using Mcma.Aws.DynamoDb;
 
 namespace Mcma.Aws.WorkflowService.Worker
 {
@@ -26,9 +27,9 @@ namespace Mcma.Aws.WorkflowService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(WorkflowServiceWorkerRequest @event)
         {
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             try
@@ -62,10 +63,10 @@ namespace Mcma.Aws.WorkflowService.Worker
 
                 switch (jobProfile.Name) {
                     case JOB_PROFILE_CONFORM_WORKFLOW:
-                        startExecutionRequest.StateMachineArn = @event.Request.StageVariables["ConformWorkflowId"];
+                        startExecutionRequest.StateMachineArn = @event.StageVariables["ConformWorkflowId"];
                         break;
                     case JOB_PROFILE_AI_WORKFLOW:
-                        startExecutionRequest.StateMachineArn = @event.Request.StageVariables["AiWorkflowId"];
+                        startExecutionRequest.StateMachineArn = @event.StageVariables["AiWorkflowId"];
                         break;
                 }
 
@@ -98,9 +99,9 @@ namespace Mcma.Aws.WorkflowService.Worker
             var notification = @event.Notification;
             var notificationJobPayload = notification.Content.ToMcmaObject<JobBase>();
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
 
-            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            var jobAssignment = await table.GetAsync(jobAssignmentId);
 
             jobAssignment.Status = notificationJobPayload.Status;
             jobAssignment.StatusMessage = notificationJobPayload.StatusMessage;
@@ -110,9 +111,9 @@ namespace Mcma.Aws.WorkflowService.Worker
             jobAssignment.JobOutput = notificationJobPayload.JobOutput;
             jobAssignment.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+            await table.PutAsync(jobAssignmentId, jobAssignment);
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
         }
@@ -136,7 +137,7 @@ namespace Mcma.Aws.WorkflowService.Worker
             return await RetrieveResourceAsync<JobProfile>(resourceManager, job.JobProfile, "job.jobProfile");
         }
 
-        private static async Task<Job> RetrieveWorkflowJobAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId)
+        private static async Task<Job> RetrieveWorkflowJobAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
 
@@ -151,14 +152,14 @@ namespace Mcma.Aws.WorkflowService.Worker
             return await resourceManager.ResolveAsync<T>(resourceId);
         }
 
-        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable table, string jobAssignmentId, JobParameterBag jobOutput)
+        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobParameterBag jobOutput)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.JobOutput = jobOutput;
             await PutJobAssignmentAsync(null, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, string status, string statusMessage)
+        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, string status, string statusMessage)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.Status = status;
@@ -166,18 +167,18 @@ namespace Mcma.Aws.WorkflowService.Worker
             await PutJobAssignmentAsync(resourceManager, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable table, string jobAssignmentId)
+        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
-            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            var jobAssignment = await table.GetAsync(jobAssignmentId);
             if (jobAssignment == null)
                 throw new Exception("JobAssignment with id '" + jobAssignmentId + "' not found");
             return jobAssignment;
         }
 
-        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, JobAssignment jobAssignment)
+        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobAssignment jobAssignment)
         {
             jobAssignment.DateModified = DateTime.UtcNow;
-            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+            await table.PutAsync(jobAssignmentId, jobAssignment);
 
             if (resourceManager != null)
                 await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);

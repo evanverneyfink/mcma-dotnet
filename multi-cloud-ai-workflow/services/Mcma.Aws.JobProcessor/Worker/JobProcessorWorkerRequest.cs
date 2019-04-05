@@ -1,12 +1,11 @@
 using Newtonsoft.Json;
 using Amazon.Lambda.Core;
 using Mcma.Core;
-using Mcma.Api;
-using Mcma.Aws.Api;
+using System.Collections.Generic;
 
 namespace Mcma.Aws.JobProcessor.Worker
 {
-    public class JobProcessorWorkerRequest
+    public class JobProcessorWorkerRequest : IStageVariableProvider
     {
         public string Action { get; set; }
 
@@ -16,6 +15,6 @@ namespace Mcma.Aws.JobProcessor.Worker
 
         public Notification Notification { get; set; }
 
-        public ApiGatewayRequest Request { get; set; }
+        public IDictionary<string, string> StageVariables { get; set; }
     }
 }

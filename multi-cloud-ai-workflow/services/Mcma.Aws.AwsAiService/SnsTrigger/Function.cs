@@ -57,7 +57,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
 
                     var invokeParams = new InvokeRequest
                     {
-                        FunctionName = StageVariables.WorkerLambdaFunctionName,
+                        FunctionName = StageVariables.WorkerFunctionName,
                         InvocationType = "Event",
                         LogType = "None",
                         Payload = JObject.FromObject(new

@@ -21,6 +21,8 @@ using Mcma.Core;
 using Mcma.Core.Utility;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
+using Mcma.Aws.S3;
+using Mcma.Aws.DynamoDb;
 
 namespace Mcma.Aws.AwsAiService.Worker
 {
@@ -44,7 +46,7 @@ namespace Mcma.Aws.AwsAiService.Worker
         internal static async Task ProcessJobAssignmentAsync(AwsAiServiceWorkerRequest @event)
         {
             var resourceManager = @event.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             try
@@ -212,7 +214,7 @@ namespace Mcma.Aws.AwsAiService.Worker
         public static async Task ProcessTranscribeJobResultAsync(AwsAiServiceWorkerRequest @event)
         {
             var resourceManager = @event.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             var job = await RetrieveJobAsync(resourceManager, table, jobAssignmentId);
@@ -289,7 +291,7 @@ namespace Mcma.Aws.AwsAiService.Worker
         public static async Task ProcessRekognitionResultAsync(AwsAiServiceWorkerRequest @event)
         {
             var resourceManager = @event.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             var job = await RetrieveJobAsync(resourceManager, table, jobAssignmentId);
@@ -405,7 +407,7 @@ namespace Mcma.Aws.AwsAiService.Worker
             return await RetrieveResourceAsync<JobProfile>(resourceManager, job.JobProfile, "job.jobProfile");
         }
 
-        private static async Task<Job> RetrieveJobAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId)
+        private static async Task<Job> RetrieveJobAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
 
@@ -420,14 +422,14 @@ namespace Mcma.Aws.AwsAiService.Worker
             return await resourceManager.ResolveAsync<T>(resourceId);
         }
 
-        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable table, string jobAssignmentId, JobParameterBag jobOutput)
+        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobParameterBag jobOutput)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.JobOutput = jobOutput;
             await PutJobAssignmentAsync(null, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, string status, string statusMessage = null)
+        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, string status, string statusMessage = null)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.Status = status;
@@ -435,18 +437,18 @@ namespace Mcma.Aws.AwsAiService.Worker
             await PutJobAssignmentAsync(resourceManager, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable table, string jobAssignmentId)
+        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
-            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            var jobAssignment = await table.GetAsync(jobAssignmentId);
             if (jobAssignment == null)
                 throw new Exception("JobAssignment with id '" + jobAssignmentId + "' not found");
             return jobAssignment;
         }
 
-        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, JobAssignment jobAssignment)
+        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobAssignment jobAssignment)
         {
             jobAssignment.DateModified = DateTime.UtcNow;
-            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+            await table.PutAsync(jobAssignmentId, jobAssignment);
 
             if (resourceManager != null)
                 await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);

@@ -14,6 +14,8 @@ using Mcma.Core;
 using Mcma.Core.Serialization;
 using Amazon.S3.Model;
 using Mcma.Core.Logging;
+using Mcma.Aws.S3;
+using Mcma.Aws.DynamoDb;
 
 namespace Mcma.Aws.TransformService.Worker
 {
@@ -31,8 +33,8 @@ namespace Mcma.Aws.TransformService.Worker
 
         internal static async Task ProcessJobAssignmentAsync(TransformServiceWorkerRequest @event)
         {
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var resourceManager = @event.GetAwsV4ResourceManager();
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
             var jobAssignmentId = @event.JobAssignmentId;
 
             try
@@ -100,7 +102,7 @@ namespace Mcma.Aws.TransformService.Worker
 
                         break;
                     case JOB_PROFILE_CREATE_PROXY_EC2:
-                        var ec2hostname = @event.Request.StageVariables["HostnameInstanceEC2"];
+                        var ec2hostname = @event.StageVariables["HostnameInstanceEC2"];
 
                         var ec2Url = "http://" + ec2hostname + "/new-transform-job";
 
@@ -141,9 +143,9 @@ namespace Mcma.Aws.TransformService.Worker
             var jobAssignmentId = @event.JobAssignmentId;
             var notification = @event.Notification;
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<JobAssignment>(@event.StageVariables["TableName"]);
 
-            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            var jobAssignment = await table.GetAsync(jobAssignmentId);
 
             var notificationJobAssignment = notification.Content.ToMcmaObject<JobAssignment>();
             jobAssignment.Status = notificationJobAssignment.Status;
@@ -153,9 +155,9 @@ namespace Mcma.Aws.TransformService.Worker
             jobAssignment.JobOutput = notificationJobAssignment.JobOutput;
             jobAssignment.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+            await table.PutAsync(jobAssignmentId, jobAssignment);
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);
         }
@@ -177,7 +179,7 @@ namespace Mcma.Aws.TransformService.Worker
             return await RetrieveResourceAsync<JobProfile>(resourceManager, job.JobProfile, "job.jobProfile");
         }
 
-        private static async Task<Job> RetrieveTransformJobAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId)
+        private static async Task<Job> RetrieveTransformJobAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
 
@@ -192,14 +194,14 @@ namespace Mcma.Aws.TransformService.Worker
             return await resourceManager.ResolveAsync<T>(resourceId);
         }
 
-        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable table, string jobAssignmentId, JobParameterBag jobOutput)
+        private static async Task UpdateJobAssignmentWithOutputAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobParameterBag jobOutput)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.JobOutput = jobOutput;
             await PutJobAssignmentAsync(null, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, string status, string statusMessage = null)
+        private static async Task UpdateJobAssignmentStatusAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, string status, string statusMessage = null)
         {
             var jobAssignment = await GetJobAssignmentAsync(table, jobAssignmentId);
             jobAssignment.Status = status;
@@ -207,18 +209,18 @@ namespace Mcma.Aws.TransformService.Worker
             await PutJobAssignmentAsync(resourceManager, table, jobAssignmentId, jobAssignment);
         }
 
-        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable table, string jobAssignmentId)
+        private static async Task<JobAssignment> GetJobAssignmentAsync(DynamoDbTable<JobAssignment> table, string jobAssignmentId)
         {
-            var jobAssignment = await table.GetAsync<JobAssignment>(jobAssignmentId);
+            var jobAssignment = await table.GetAsync(jobAssignmentId);
             if (jobAssignment == null)
                 throw new Exception("JobAssignment with id '" + jobAssignmentId + "' not found");
             return jobAssignment;
         }
 
-        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable table, string jobAssignmentId, JobAssignment jobAssignment)
+        private static async Task PutJobAssignmentAsync(ResourceManager resourceManager, DynamoDbTable<JobAssignment> table, string jobAssignmentId, JobAssignment jobAssignment)
         {
             jobAssignment.DateModified = DateTime.UtcNow;
-            await table.PutAsync<JobAssignment>(jobAssignmentId, jobAssignment);
+            await table.PutAsync(jobAssignmentId, jobAssignment);
 
             if (resourceManager != null)
                 await resourceManager.SendNotificationAsync(jobAssignment, jobAssignment.NotificationEndpoint);

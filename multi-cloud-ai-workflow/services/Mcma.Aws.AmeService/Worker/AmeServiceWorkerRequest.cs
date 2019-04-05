@@ -1,12 +1,9 @@
-using Newtonsoft.Json;
-using Amazon.Lambda.Core;
+using System.Collections.Generic;
 using Mcma.Core;
-using Mcma.Api;
-using Mcma.Aws.Api;
 
 namespace Mcma.Aws.AmeService.Worker
 {
-    public class AmeServiceWorkerRequest
+    public class AmeServiceWorkerRequest : IStageVariableProvider
     {
         public string Action { get; set; }
 
@@ -14,6 +11,6 @@ namespace Mcma.Aws.AmeService.Worker
 
         public Notification Notification { get; set; }
 
-        public ApiGatewayRequest Request { get; set; }
+        public IDictionary<string, string> StageVariables { get; set; }
     }
 }

@@ -11,6 +11,7 @@ using Mcma.Core.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Mcma.Core.Logging;
+using Mcma.Aws.S3;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
@@ -43,7 +44,7 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
 
                     var invokeParams = new InvokeRequest
                     {
-                        FunctionName = StageVariables.WorkerLambdaFunctionName,
+                        FunctionName = StageVariables.WorkerFunctionName,
                         InvocationType = "Event",
                         LogType = "None",
                         Payload = new

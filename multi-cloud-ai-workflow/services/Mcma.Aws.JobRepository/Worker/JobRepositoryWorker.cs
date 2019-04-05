@@ -7,6 +7,7 @@ using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using Mcma.Aws.DynamoDb;
 
 namespace Mcma.Aws.JobRepository.Worker
 {
@@ -24,10 +25,10 @@ namespace Mcma.Aws.JobRepository.Worker
         {
             var jobId = @event.JobId;
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
-            var job = await table.GetAsync<Job>(jobId);
+            var table = new DynamoDbTable<Job>(@event.StageVariables["TableName"]);
+            var job = await table.GetAsync(jobId);
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
             try
             {
@@ -48,7 +49,7 @@ namespace Mcma.Aws.JobRepository.Worker
 
             job.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<Job>(jobId, job);
+            await table.PutAsync(jobId, job);
 
             await resourceManager.SendNotificationAsync(job, job.NotificationEndpoint);
         }
@@ -75,9 +76,9 @@ namespace Mcma.Aws.JobRepository.Worker
             var notification = @event.Notification;
             var notificationJob = notification.Content.ToMcmaObject<JobBase>();
 
-            var table = new DynamoDbTable(@event.Request.StageVariables["TableName"]);
+            var table = new DynamoDbTable<Job>(@event.StageVariables["TableName"]);
 
-            var job = await table.GetAsync<Job>(jobId);
+            var job = await table.GetAsync(jobId);
 
             // not updating job if it already was marked as completed or failed.
             if (job.Status == "COMPLETED" || job.Status == "FAILED")
@@ -92,9 +93,9 @@ namespace Mcma.Aws.JobRepository.Worker
             job.JobOutput = notificationJob.JobOutput;
             job.DateModified = DateTime.UtcNow;
 
-            await table.PutAsync<Job>(jobId, job);
+            await table.PutAsync(jobId, job);
 
-            var resourceManager = @event.Request.GetAwsV4ResourceManager();
+            var resourceManager = @event.GetAwsV4ResourceManager();
 
             await resourceManager.SendNotificationAsync(job, job.NotificationEndpoint);
         }

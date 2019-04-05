@@ -13,7 +13,7 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
         public string ServicesUrl => Environment.GetEnvironmentVariable(nameof(ServicesUrl));
         public string ServicesAuthType => Environment.GetEnvironmentVariable(nameof(ServicesAuthType));
         public string ServicesAuthContext => Environment.GetEnvironmentVariable(nameof(ServicesAuthContext));
-        public string WorkerLambdaFunctionName => Environment.GetEnvironmentVariable(nameof(WorkerLambdaFunctionName));
+        public string WorkerFunctionName => Environment.GetEnvironmentVariable(nameof(WorkerFunctionName));
         public string ServiceOutputBucket => Environment.GetEnvironmentVariable(nameof(ServiceOutputBucket));
 
         public IDictionary<string, string> ToDictionary() => typeof(StageVariables).GetProperties().ToDictionary(p => p.Name, p => p.GetValue(this)?.ToString());
