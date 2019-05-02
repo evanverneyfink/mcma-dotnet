@@ -26,12 +26,14 @@ namespace Mcma.Aws.ServiceRegistry.ApiHandler
                 .AddRoutes(AwsDefaultRoutes.WithDynamoDb<JobProfile>().AddAll().Build())
                 .ToController();
 
-        public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)
         {
             Logger.Debug(request.ToMcmaJson().ToString());
             Logger.Debug(context.ToMcmaJson().ToString());
 
-            return Controller.HandleRequestAsync(request, context);
+            var resp = await Controller.HandleRequestAsync(request, context);
+            Logger.Debug(resp.ToMcmaJson().ToString());
+            return resp;
         }
     }
 }

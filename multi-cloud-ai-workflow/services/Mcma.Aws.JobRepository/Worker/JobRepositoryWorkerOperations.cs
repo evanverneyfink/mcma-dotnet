@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Amazon.Lambda.Core;
@@ -8,24 +8,21 @@ using Mcma.Core.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using Mcma.Aws.DynamoDb;
+using Mcma.Worker;
 
 namespace Mcma.Aws.JobRepository.Worker
 {
-    internal class JobRepositoryWorker : Mcma.Worker.Worker<JobRepositoryWorkerRequest>
+    internal static class JobRepositoryWorkerOperations
     {
-        protected override IDictionary<string, Func<JobRepositoryWorkerRequest, Task>> Operations { get; } =
-            new Dictionary<string, Func<JobRepositoryWorkerRequest, Task>>
-            {
-                ["CreateJobProcess"] = CreateJobProcessAsync,
-                ["DeleteJobProcess"] = DeleteJobProcessAsync,
-                ["ProcessNotification"] = ProcessNotificationAsync
-            };
+        public const string CreateJobProcessOperationName = "CreateJobProcess";
+        public const string DeleteJobProcessOperationName = "DeleteJobProcess";
+        public const string ProcessNotificationOperationName = "ProcessNotification";
 
-        internal static async Task CreateJobProcessAsync(JobRepositoryWorkerRequest @event)
+        internal static async Task CreateJobProcessAsync(WorkerRequest @event, CreateJobProcessRequest createRequest)
         {
-            var jobId = @event.JobId;
+            var jobId = createRequest.JobId;
 
-            var table = new DynamoDbTable<Job>(@event.StageVariables["TableName"]);
+            var table = new DynamoDbTable<Job>(@event.TableName());
             var job = await table.GetAsync(jobId);
 
             var resourceManager = @event.GetAwsV4ResourceManager();
@@ -43,7 +40,7 @@ namespace Mcma.Aws.JobRepository.Worker
                 Logger.Error("Failed to create JobProcess.");
                 Logger.Exception(error);
 
-                job.Status = "FAILED";
+                job.Status = JobStatus.Failed;
                 job.StatusMessage = $"Failed to create JobProcess due to error '{error}'";
             }
 
@@ -54,9 +51,9 @@ namespace Mcma.Aws.JobRepository.Worker
             await resourceManager.SendNotificationAsync(job, job.NotificationEndpoint);
         }
 
-        internal static async Task DeleteJobProcessAsync(JobRepositoryWorkerRequest @event)
+        internal static async Task DeleteJobProcessAsync(WorkerRequest @event, DeleteJobProcessRequest deleteRequest)
         {
-            var jobProcessId = @event.JobProcessId;
+            var jobProcessId = deleteRequest.JobProcessId;
 
             try
             {
@@ -70,18 +67,18 @@ namespace Mcma.Aws.JobRepository.Worker
             }
         }
 
-        internal static async Task ProcessNotificationAsync(JobRepositoryWorkerRequest @event)
+        internal static async Task ProcessNotificationAsync(WorkerRequest @event, ProcessNotificationRequest notificationRequest)
         {
-            var jobId = @event.JobId;
-            var notification = @event.Notification;
+            var jobId = notificationRequest.JobId;
+            var notification = notificationRequest.Notification;
             var notificationJob = notification.Content.ToMcmaObject<JobBase>();
 
-            var table = new DynamoDbTable<Job>(@event.StageVariables["TableName"]);
+            var table = new DynamoDbTable<Job>(@event.TableName());
 
             var job = await table.GetAsync(jobId);
 
             // not updating job if it already was marked as completed or failed.
-            if (job.Status == "COMPLETED" || job.Status == "FAILED")
+            if (job.Status == JobStatus.Completed || job.Status == JobStatus.Failed)
             {
                 Logger.Warn("Ignoring update of job that tried to change state from " + job.Status + " to " + notificationJob.Status);
                 return;

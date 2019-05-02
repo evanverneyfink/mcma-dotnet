@@ -11,6 +11,7 @@ using Mcma.Aws;
 using Mcma.Core.Logging;
 using Mcma.Core.Serialization;
 using Mcma.Core.Utility;
+using Mcma.Core;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
@@ -20,7 +21,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
 
     public class Function
     {
-        private StageVariables StageVariables { get; } = new StageVariables();
+        private IContextVariableProvider ContextVariableProvider { get; } = new EnvironmentVariableProvider();
 
         public async Task Handler(SNSEvent @event, ILambdaContext context)
         {
@@ -57,19 +58,22 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
 
                     var invokeParams = new InvokeRequest
                     {
-                        FunctionName = StageVariables.WorkerFunctionName,
+                        FunctionName = ContextVariableProvider.ContextVariables["WorkerFunctionName"],
                         InvocationType = "Event",
                         LogType = "None",
                         Payload = JObject.FromObject(new
                         {
-                            action = "ProcessRekognitionResult",
-                            stageVariables = StageVariables.ToDictionary(),
-                            jobAssignmentId,
-                            jobExternalInfo = new
+                            operationName = "ProcessRekognitionResult",
+                            contextVariables = ContextVariableProvider.ContextVariables,
+                            input = new
                             {
-                                rekoJobId,
-                                rekoJobType,
-                                status
+                                jobAssignmentId,
+                                jobExternalInfo = new
+                                {
+                                    rekoJobId,
+                                    rekoJobType,
+                                    status
+                                }
                             }
                         }).ToString()
                     };

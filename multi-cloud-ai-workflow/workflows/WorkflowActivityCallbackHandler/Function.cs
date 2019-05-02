@@ -50,30 +50,28 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
 
             var taskToken = requestContext.Request.QueryStringParameters["taskToken"];
 
-            var stepFunctionClient = new AmazonStepFunctionsClient();
-            switch (job.Status)
-            {
-                case "COMPLETED":
-                    Logger.Debug($"Sending task success for task token {taskToken}");
-                    await stepFunctionClient.SendTaskSuccessAsync(new SendTaskSuccessRequest
-                    {
-                        TaskToken = taskToken,
-                        Output = $"\"{notification.Source}\""
-                    });
-                    break;
-                case "FAILED":
-                    Logger.Debug($"Sending task failure for task token {taskToken}");
-                    var error = job.Type + " failed execution";
-                    var cause = job.Type + " with id '" + job.Id + "' failed execution with statusMessage '" + job.StatusMessage + "'";
-
-                    await stepFunctionClient.SendTaskFailureAsync(new SendTaskFailureRequest
-                    {
-                        TaskToken = taskToken,
-                        Error = error,
-                        Cause = cause
-                    });
-                    break;
-            }
+            
+            JobStatus jobStatus = job.Status;
+            
+            using (var stepFunctionClient = new AmazonStepFunctionsClient())
+                switch (jobStatus)
+                {
+                    case nameof(JobStatus.Completed):
+                        await stepFunctionClient.SendTaskSuccessAsync(new SendTaskSuccessRequest
+                        {
+                            TaskToken = taskToken,
+                            Output = $"\"{notification.Source}\""
+                        });
+                        break;
+                    case nameof(JobStatus.Failed):
+                        await stepFunctionClient.SendTaskFailureAsync(new SendTaskFailureRequest
+                        {
+                            TaskToken = taskToken,
+                            Error = job.Type + " failed execution",
+                            Cause = job.Type + " with id '" + job.Id + "' failed execution with statusMessage '" + job.StatusMessage + "'"
+                        });
+                        break;
+                }
         }
 
         public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)

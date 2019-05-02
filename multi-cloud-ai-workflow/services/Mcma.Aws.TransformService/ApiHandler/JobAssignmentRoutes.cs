@@ -34,10 +34,13 @@ namespace Mcma.Aws.TransformService.ApiHandler
                 requestContext.WorkerFunctionName(),
                 new
                 {
-                    action = "ProcessNotification",
-                    stageVariables = requestContext.ContextVariables,
-                    jobAssignmentId = jobAssignment.Id,
-                    notification = notification
+                    operationName = "ProcessNotification",
+                    contextVariables = requestContext.ContextVariables,
+                    input = new
+                    {
+                        jobAssignmentId = jobAssignment.Id,
+                        notification = notification
+                    }
                 });
         }
     }

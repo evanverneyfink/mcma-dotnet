@@ -33,9 +33,12 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
                                 WorkerInvoker.RunAsync(requestContext.WorkerFunctionName(),
                                     new
                                     {
-                                        action = "createJobAssignment",
-                                        request = requestContext.Request,
-                                        jobProcessId = jobProcess.Id
+                                        operationName = "createJobAssignment",
+                                        contextVariables = requestContext.ContextVariables,
+                                        input = new
+                                        {
+                                            jobProcessId = jobProcess.Id
+                                        }
                                     })))
                         .Route(r => r.Update).Remove()
                         .Build())

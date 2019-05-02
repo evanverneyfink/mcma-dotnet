@@ -21,8 +21,8 @@ namespace Mcma.Aws.MediaRepository.ApiHandler
     {
         private static ApiGatewayApiController Controller { get; } =
             new McmaApiRouteCollection()
-                .AddRoutes(AwsDefaultRoutes.WithDynamoDb<BMContent>().AddAll().Build())
-                .AddRoutes(AwsDefaultRoutes.WithDynamoDb<BMEssence>().AddAll().Build())
+                .AddRoutes(AwsDefaultRoutes.WithDynamoDb<BMContent>("bm-contents").AddAll().Build())
+                .AddRoutes(AwsDefaultRoutes.WithDynamoDb<BMEssence>("bm-essences").AddAll().Build())
                 .ToController();
 
         public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)

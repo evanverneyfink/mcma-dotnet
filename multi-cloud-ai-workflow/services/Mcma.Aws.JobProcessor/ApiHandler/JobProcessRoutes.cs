@@ -43,10 +43,13 @@ namespace Mcma.Aws.JobProcessor.ApiHandler
                 requestContext.WorkerFunctionName(),
                 new
                 {
-                    action = "processNotification",
-                    stageVariables = requestContext.ContextVariables,
-                    jobProcessId = jobProcess.Id,
-                    notification = notification
+                    operationName = "processNotification",
+                    contextVariables = requestContext.ContextVariables,
+                    input = new
+                    {
+                        jobProcessId = jobProcess.Id,
+                        notification = notification
+                    }
                 });
         }
     }

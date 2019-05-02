@@ -67,10 +67,13 @@ namespace Mcma.Aws.AzureAiService.ApiInsecure
                 requestContext.WorkerFunctionName(),
                 new
                 {
-                    action = "ProcessNotification",
-                    stageVariables = requestContext.ContextVariables,
-                    jobAssignmentId,
-                    notification
+                    operationName = "ProcessNotification",
+                    contextVariables = requestContext.ContextVariables,
+                    input = new
+                    {
+                        jobAssignmentId,
+                        notification
+                    }
                 });
         }
     }

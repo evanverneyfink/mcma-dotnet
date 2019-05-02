@@ -68,10 +68,13 @@ namespace Mcma.Aws.JobRepository.ApiHandler
                 requestContext.WorkerFunctionName(),
                 new
                 {
-                    action = "processNotification",
-                    stageVariables = requestContext.ContextVariables,
-                    jobId = job.Id,
-                    notification = notification
+                    operationName = "processNotification",
+                    contextVariables = requestContext.ContextVariables,
+                    input = new
+                    {
+                        jobId = job.Id,
+                        notification = notification
+                    }
                 });
         }
     }

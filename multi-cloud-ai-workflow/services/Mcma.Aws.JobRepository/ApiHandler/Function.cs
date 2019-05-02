@@ -33,14 +33,24 @@ namespace Mcma.Aws.JobRepository.ApiHandler
                             r.OnCompleted((ctx, job) =>
                                 WorkerInvoker.RunAsync(
                                     ctx.WorkerFunctionName(),
-                                    new { action = "createJobProcess", stageVariables = ctx.ContextVariables, jobId = job.Id })))
+                                    new
+                                    {
+                                        operationName = "createJobProcess",
+                                        contextVariables = ctx.ContextVariables,
+                                        input = new { jobId = job.Id }
+                                    })))
                         .Route(r => r.Delete).Configure(r =>
                             r.OnCompleted(async (ctx, job) =>
                             {
                                 if (!string.IsNullOrWhiteSpace(job.JobProcess))
                                     await WorkerInvoker.RunAsync(
                                         ctx.WorkerFunctionName(),
-                                        new { action = "deleteJobProcess", stageVariables = ctx.ContextVariables, jobProcessId = job.JobProcess });
+                                        new
+                                        {
+                                            operationName = "deleteJobProcess",
+                                            contextVariables = ctx.ContextVariables,
+                                            input = new { jobProcessId = job.JobProcess }
+                                        });
                             }))
                         .Route(r => r.Update).Remove()
                         .Build())

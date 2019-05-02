@@ -5,9 +5,12 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.Json;
 using Mcma.Aws;
+using Mcma.Aws.Worker;
 using Mcma.Core.Serialization;
 using Mcma.Core.Logging;
 using Mcma.Worker;
+using Mcma.Core;
+using Mcma.Aws.DynamoDb;
 
 [assembly: LambdaSerializer(typeof(McmaLambdaSerializer))]
 [assembly: McmaLambdaLogger]
@@ -16,12 +19,28 @@ namespace Mcma.Aws.AzureAiService.Worker
 {
     public class Function
     {
-        public async Task Handler(AzureAiServiceWorkerRequest @event, ILambdaContext context)
+        public static IWorker Worker { get; } =
+            McmaWorker.Builder()
+                .HandleJobsOfType<AIJob>(x =>
+                    x.AddProfile<TranscribeAudio>(TranscribeAudio.Name)
+                     .AddProfile<TranslateText>(TranslateText.Name)
+                     .AddProfile<ExtractAllAIMetadata>(ExtractAllAIMetadata.Name))
+                .HandleRequestsOfType<ProcessNotificationRequest>(
+                    x =>
+                        x.WithOperation(ProcessNotificationHandler.OperationName,
+                            y =>
+                                y.Handle(
+                                    new ProcessNotificationHandler(
+                                        new DynamoDbTableProvider<JobAssignment>(),
+                                        new AwsWorkerResourceManagerProvider()))))
+                .Build();
+
+        public async Task Handler(WorkerRequest @event, ILambdaContext context)
         {
             Logger.Debug(@event.ToMcmaJson().ToString());
             Logger.Debug(context.ToMcmaJson().ToString());
 
-            await McmaWorker.DoWorkAsync<AzureAiServiceWorker, AzureAiServiceWorkerRequest>(@event.Action, @event);
+            await Worker.DoWorkAsync(@event);
         }
     }
 }
