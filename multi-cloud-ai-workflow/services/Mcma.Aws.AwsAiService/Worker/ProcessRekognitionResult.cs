@@ -1,12 +1,12 @@
 ﻿namespace Mcma.Aws.AwsAiService.Worker
 {
-    internal class ProcessRekognitionResult
+    public class ProcessRekognitionResult
     {
         public string JobAssignmentId { get; set; }
 
         public RekognitionJobInfo JobInfo { get; set; }
 
-        internal class RekognitionJobInfo
+        public class RekognitionJobInfo
         {
             public string RekoJobId { get; set; }
 

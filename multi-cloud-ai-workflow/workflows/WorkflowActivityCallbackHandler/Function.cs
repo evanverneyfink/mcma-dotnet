@@ -49,29 +49,28 @@ namespace Mcma.Aws.Workflows.WorkflowActivityCallbackHandler
             var job = notification.Content.ToMcmaObject<Job>();
 
             var taskToken = requestContext.Request.QueryStringParameters["taskToken"];
-
             
-            JobStatus jobStatus = job.Status;
-            
-            using (var stepFunctionClient = new AmazonStepFunctionsClient())
-                switch (jobStatus)
-                {
-                    case nameof(JobStatus.Completed):
-                        await stepFunctionClient.SendTaskSuccessAsync(new SendTaskSuccessRequest
-                        {
-                            TaskToken = taskToken,
-                            Output = $"\"{notification.Source}\""
-                        });
-                        break;
-                    case nameof(JobStatus.Failed):
-                        await stepFunctionClient.SendTaskFailureAsync(new SendTaskFailureRequest
-                        {
-                            TaskToken = taskToken,
-                            Error = job.Type + " failed execution",
-                            Cause = job.Type + " with id '" + job.Id + "' failed execution with statusMessage '" + job.StatusMessage + "'"
-                        });
-                        break;
-                }
+            if (job.Status == JobStatus.Completed)
+            {
+                using (var stepFunctionClient = new AmazonStepFunctionsClient())
+                    await stepFunctionClient.SendTaskSuccessAsync(new SendTaskSuccessRequest
+                    {
+                        TaskToken = taskToken,
+                        Output = $"\"{notification.Source}\""
+                    });
+            }
+            else if (job.Status == JobStatus.Failed)
+            {
+                using (var stepFunctionClient = new AmazonStepFunctionsClient())
+                    await stepFunctionClient.SendTaskFailureAsync(new SendTaskFailureRequest
+                    {
+                        TaskToken = taskToken,
+                        Error = job.Type + " failed execution",
+                        Cause = job.Type + " with id '" + job.Id + "' failed execution with statusMessage '" + job.StatusMessage + "'"
+                    });
+            }
+            else
+                Logger.Debug($"Ignoring notification for updated status of '{job.Status}'");
         }
 
         public Task<APIGatewayProxyResponse> Handler(APIGatewayProxyRequest request, ILambdaContext context)

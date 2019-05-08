@@ -68,7 +68,7 @@ namespace Mcma.Aws.AwsAiService.SnsTrigger
                             input = new
                             {
                                 jobAssignmentId,
-                                jobExternalInfo = new
+                                jobInfo = new
                                 {
                                     rekoJobId,
                                     rekoJobType,

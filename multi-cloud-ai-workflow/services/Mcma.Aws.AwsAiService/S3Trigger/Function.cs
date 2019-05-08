@@ -52,8 +52,11 @@ namespace Mcma.Aws.AwsAiService.S3Trigger
                         {
                             operationName = "ProcessTranscribeJobResult",
                             contextVariables = ContextVariableProvider.ContextVariables,
-                            jobAssignmentId,
-                            outputFile = new S3Locator { AwsS3Bucket = awsS3Bucket, AwsS3Key = awsS3Key }
+                            input = new
+                            {
+                                jobAssignmentId,
+                                outputFile = new S3Locator { AwsS3Bucket = awsS3Bucket, AwsS3Key = awsS3Key }
+                            }
                         }.ToMcmaJson().ToString()
                     };
 
